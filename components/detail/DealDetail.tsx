@@ -125,10 +125,10 @@ export default function DealDetail({ deal, retailer }: DealDetailProps) {
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 mb-6 shadow-md">
               <div className="flex items-baseline gap-4 mb-3">
                 <span className="text-5xl font-bold text-gray-900">
-                  ${formatPrice(deal.price)}
+                  {formatPrice(deal.price)}
                 </span>
                 <span className="text-2xl text-gray-500 line-through">
-                  ${formatPrice(deal.originalPrice)}
+                  {formatPrice(deal.originalPrice)}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -136,7 +136,7 @@ export default function DealDetail({ deal, retailer }: DealDetailProps) {
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 <p className="text-green-700 font-bold text-lg">
-                  Save ${formatPrice(deal.originalPrice - deal.price)} ({deal.savingsPercentage}% off)
+                  Save {formatPrice(deal.originalPrice - deal.price)} ({deal.savingsPercentage}% off)
                 </p>
               </div>
             </div>

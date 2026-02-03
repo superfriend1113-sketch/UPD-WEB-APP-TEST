@@ -52,17 +52,17 @@ export default function DealCard({ deal }: DealCardProps) {
         {/* Pricing */}
         <div className="flex items-baseline gap-2 mb-2">
           <span className="text-2xl font-bold text-gray-900">
-            ${formatPrice(deal.price)}
+            {formatPrice(deal.price)}
           </span>
           <span className="text-sm text-gray-500 line-through">
-            ${formatPrice(deal.originalPrice)}
+            {formatPrice(deal.originalPrice)}
           </span>
         </div>
 
         {/* Savings Amount */}
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-green-600">
-            Save ${formatPrice(deal.originalPrice - deal.price)}
+            Save {formatPrice(deal.originalPrice - deal.price)}
           </span>
           <span className="text-xs text-gray-500 group-hover:text-blue-600 transition-colors">
             View Deal →
