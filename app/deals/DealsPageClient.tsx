@@ -107,41 +107,41 @@ export default function DealsPageClient({ categoryParam }: DealsPageClientProps)
   const selectedCategoryName = categories.find(c => c.slug === filters.categorySlug)?.name;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 md:py-12">
+    <main className="min-h-screen bg-white py-8">
       <div className="container mx-auto px-4 max-w-7xl">
-        {/* Page Header */}
-        <div className="mb-8 md:mb-12">
-          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-3">
+        {/* Page Header Card */}
+        <div className="bg-gradient-to-br from-teal-50 to-orange-50 border border-gray-200 rounded-2xl shadow-md p-6 md:p-8 mb-6">
+          <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
             {selectedCategoryName ? `${selectedCategoryName} Deals` : 'All Deals'}
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-base text-gray-600">
             {filteredDeals.length} {filteredDeals.length === 1 ? 'deal' : 'deals'} available
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Filters Sidebar */}
           <aside className="lg:col-span-1 space-y-4">
             {/* Active Filters Badge */}
             {hasActiveFilters && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-blue-900">Active Filters</span>
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-semibold text-gray-900">Active Filters</span>
                   <button
                     onClick={handleClearAllFilters}
-                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-xs text-teal-900 hover:text-teal-800 font-medium"
                   >
                     Clear All
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {selectedCategoryName && (
-                    <span className="inline-flex items-center px-2 py-1 bg-white rounded-full text-xs font-medium text-gray-700 border border-gray-200">
+                    <span className="inline-flex items-center px-3 py-1 bg-teal-50 rounded-full text-xs font-medium text-teal-900 border border-teal-200">
                       {selectedCategoryName}
                     </span>
                   )}
                   {(filters.minPrice !== null || filters.maxPrice !== null) && (
-                    <span className="inline-flex items-center px-2 py-1 bg-white rounded-full text-xs font-medium text-gray-700 border border-gray-200">
+                    <span className="inline-flex items-center px-3 py-1 bg-orange-50 rounded-full text-xs font-medium text-orange-900 border border-orange-200">
                       ${filters.minPrice || 0} - ${filters.maxPrice || '∞'}
                     </span>
                   )}
@@ -165,18 +165,20 @@ export default function DealsPageClient({ categoryParam }: DealsPageClientProps)
           {/* Deals Grid */}
           <div className="lg:col-span-3">
             {filteredDeals.length === 0 ? (
-              <EmptyState
-                message="No deals found matching your filters"
-                action={
-                  <Button onClick={handleClearAllFilters}>
-                    Clear All Filters
-                  </Button>
-                }
-              />
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-12">
+                <EmptyState
+                  message="No deals found matching your filters"
+                  action={
+                    <Button onClick={handleClearAllFilters}>
+                      Clear All Filters
+                    </Button>
+                  }
+                />
+              </div>
             ) : (
               <>
                 {/* Results Summary */}
-                <div className="mb-6 flex items-center justify-between">
+                <div className="mb-4 flex items-center justify-between">
                   <p className="text-sm text-gray-600">
                     Showing <span className="font-semibold text-gray-900">{filteredDeals.length}</span> {filteredDeals.length === 1 ? 'result' : 'results'}
                   </p>

@@ -55,9 +55,9 @@ export default function PriceRangeFilter({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
-      <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+      <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center">
+        <svg className="w-4 h-4 mr-2 text-teal-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         Price Range
@@ -81,7 +81,7 @@ export default function PriceRangeFilter({
                 onChange={(e) => setMinInput(e.target.value)}
                 onBlur={validateAndApply}
                 placeholder="0"
-                className="w-full min-h-[44px] pl-7 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full min-h-[44px] pl-7 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
               />
             </div>
           </div>
@@ -100,7 +100,7 @@ export default function PriceRangeFilter({
                 onChange={(e) => setMaxInput(e.target.value)}
                 onBlur={validateAndApply}
                 placeholder="999"
-                className="w-full min-h-[44px] pl-7 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full min-h-[44px] pl-7 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
               />
             </div>
           </div>
@@ -119,8 +119,8 @@ export default function PriceRangeFilter({
         )}
 
         {/* Matching Count */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-sm font-semibold text-blue-900 flex items-center justify-between">
+        <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+          <p className="text-sm font-semibold text-teal-900 flex items-center justify-between">
             <span>Matching Deals</span>
             <span className="text-lg">{matchingCount}</span>
           </p>

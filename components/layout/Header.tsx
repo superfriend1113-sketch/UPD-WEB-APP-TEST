@@ -1,75 +1,72 @@
-/**
- * Header Component
- * Main navigation header for the application
- */
-
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-      <nav className="container mx-auto px-4 max-w-7xl">
-        <div className="flex items-center justify-between h-16">
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <nav className="container mx-auto px-4 sm:px-6 max-w-7xl">
+        <div className="flex items-center justify-between h-14 gap-6">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">U</span>
+          <Link href="/" className="flex items-center shrink-0">
+            <div className="relative w-8 h-8 rounded-md overflow-hidden">
+              <Image
+                src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=100&h=100&fit=crop"
+                alt="Logo"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">
-              Unlimited Perfect Deals
-            </span>
-            <span className="text-xl font-bold text-gray-900 sm:hidden">
-              UPD
-            </span>
           </Link>
 
+          {/* Search Bar */}
+          <div className="flex-1 max-w-md hidden md:block">
+            <form className="relative">
+              <input
+                type="text"
+                placeholder="Search deals"
+                className="w-full h-9 px-4 text-sm text-gray-900 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-gray-500"
+              />
+            </form>
+          </div>
+
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-6">
             <Link 
               href="/deals" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+              className="text-sm text-gray-700 hover:text-orange-600 font-medium transition-colors"
             >
-              All Deals
+              Deals
             </Link>
             <Link 
               href="/deals?category=electronics" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+              className="text-sm text-gray-700 hover:text-orange-600 font-medium transition-colors"
             >
               Electronics
             </Link>
             <Link 
               href="/deals?category=home-garden" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+              className="text-sm text-gray-700 hover:text-orange-600 font-medium transition-colors"
             >
-              Home & Garden
+              Home
             </Link>
             <Link 
               href="/deals?category=clothing" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+              className="text-sm text-gray-700 hover:text-orange-600 font-medium transition-colors"
             >
               Clothing
-            </Link>
-          </div>
-
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <Link
-              href="/deals"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Browse Deals
             </Link>
           </div>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 shrink-0"
           >
             <svg
               className="w-6 h-6 text-gray-700"
@@ -98,32 +95,40 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200">
-            <div className="flex flex-col space-y-4">
+          <div className="lg:hidden py-4 border-t border-gray-200">
+            {/* Mobile Search */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search deals"
+                className="w-full h-10 px-4 text-sm text-gray-900 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+            <div className="flex flex-col space-y-3">
               <Link
                 href="/deals"
-                className="text-gray-700 hover:text-blue-600 font-medium"
+                className="text-sm text-gray-700 hover:text-orange-600 font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                All Deals
+                Deals
               </Link>
               <Link
                 href="/deals?category=electronics"
-                className="text-gray-700 hover:text-blue-600 font-medium"
+                className="text-sm text-gray-700 hover:text-orange-600 font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Electronics
               </Link>
               <Link
                 href="/deals?category=home-garden"
-                className="text-gray-700 hover:text-blue-600 font-medium"
+                className="text-sm text-gray-700 hover:text-orange-600 font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Home & Garden
+                Home
               </Link>
               <Link
                 href="/deals?category=clothing"
-                className="text-gray-700 hover:text-blue-600 font-medium"
+                className="text-sm text-gray-700 hover:text-orange-600 font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Clothing

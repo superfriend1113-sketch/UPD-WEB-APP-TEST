@@ -4,6 +4,7 @@
  */
 
 import Hero from '@/components/landing/Hero';
+import PromoBanner from '@/components/landing/PromoBanner';
 import FeaturedDeals from '@/components/landing/FeaturedDeals';
 import CategoryNav from '@/components/landing/CategoryNav';
 import { getFeaturedDeals, getCategories } from '@/lib/firestore';
@@ -17,9 +18,10 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen">
+      <PromoBanner />
       <Hero />
-      <FeaturedDeals deals={featuredDeals} />
       <CategoryNav categories={categories} />
+      <FeaturedDeals deals={featuredDeals} />
     </main>
   );
 }

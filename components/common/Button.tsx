@@ -19,7 +19,7 @@ export default function Button({
   const baseStyles = 'min-w-[44px] min-h-[44px] px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variantStyles = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800',
+    primary: 'bg-teal-900 text-white hover:bg-teal-800 active:bg-teal-950',
     secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-400',
   };
 

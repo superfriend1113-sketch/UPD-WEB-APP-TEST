@@ -4,6 +4,7 @@
  */
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -12,13 +13,15 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">U</span>
+            <div className="flex items-center mb-4">
+              <div className="relative w-8 h-8 rounded-md overflow-hidden">
+                <Image
+                  src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=100&h=100&fit=crop"
+                  alt="Logo"
+                  fill
+                  className="object-cover"
+                />
               </div>
-              <span className="text-xl font-bold text-white">
-                Unlimited Perfect Deals
-              </span>
             </div>
             <p className="text-gray-400 mb-4 max-w-md">
               Discover amazing deals from top retailers. Save money on electronics, fashion, home goods, and more.

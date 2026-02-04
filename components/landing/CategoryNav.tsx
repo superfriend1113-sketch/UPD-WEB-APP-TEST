@@ -4,61 +4,63 @@
  */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Category } from '@/types/category';
 
 interface CategoryNavProps {
   categories: Category[];
 }
 
-const categoryIcons: Record<string, string> = {
-  'electronics': '💻',
-  'home-garden': '🏡',
-  'clothing': '👕',
-  'health-beauty': '💄',
-  'sports-outdoors': '⚽',
+const categoryImages: Record<string, string> = {
+  'electronics': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=200&h=200&fit=crop',
+  'home-garden': 'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=200&h=200&fit=crop',
+  'clothing': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=200&h=200&fit=crop',
+  'health-beauty': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&fit=crop',
+  'sports-outdoors': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200&h=200&fit=crop',
 };
 
 export default function CategoryNav({ categories }: CategoryNavProps) {
   return (
-    <section className="py-16 md:py-24 bg-gray-50">
-      <div className="container mx-auto px-4 max-w-7xl">
+    <section className="py-8 bg-white border-b border-gray-100">
+      <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-            Shop by Category
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Explore popular categories
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Browse deals organized by your favorite categories
-          </p>
+          <Link
+            href="/deals"
+            className="text-sm font-medium text-teal-900 hover:text-teal-800 hidden sm:block"
+          >
+            See all categories
+          </Link>
         </div>
 
-        {/* Categories Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {categories.map(category => (
-            <Link
-              key={category.id}
-              href={`/deals?category=${category.slug}`}
-              className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200"
-            >
-              {/* Gradient Overlay on Hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
-              {/* Content */}
-              <div className="relative p-6 flex flex-col items-center justify-center min-h-[140px]">
-                <div className="text-5xl mb-3 transform group-hover:scale-110 transition-transform duration-300">
-                  {categoryIcons[category.slug] || category.icon || '📦'}
+        {/* Categories Horizontal Scroll */}
+        <div className="-mx-4 sm:mx-0">
+          <div className="flex gap-3 overflow-x-auto pb-4 px-4 sm:px-0 scrollbar-hide sm:grid sm:grid-cols-5 sm:gap-4">
+            {categories.map(category => (
+              <Link
+                key={category.id}
+                href={`/deals?category=${category.slug}`}
+                className="group flex-shrink-0 w-32 sm:w-auto bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-teal-900 hover:shadow-md transition-all"
+              >
+                <div className="relative aspect-square w-full bg-gray-100">
+                  <Image
+                    src={categoryImages[category.slug] || 'https://images.unsplash.com/photo-1486401899868-0e435ed85128?w=200&h=200&fit=crop'}
+                    alt={category.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
                 </div>
-                <h3 className="text-center font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-sm md:text-base">
-                  {category.name}
-                </h3>
-                {category.dealCount > 0 && (
-                  <span className="mt-2 text-xs text-gray-500 group-hover:text-blue-500">
-                    {category.dealCount} deals
-                  </span>
-                )}
-              </div>
-            </Link>
-          ))}
+                <div className="p-3 text-center">
+                  <h3 className="text-xs font-medium text-gray-900 line-clamp-2">
+                    {category.name}
+                  </h3>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </section>

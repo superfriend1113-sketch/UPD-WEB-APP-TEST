@@ -14,7 +14,7 @@ export default function RetailerInfo({ retailer }: RetailerInfoProps) {
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 shadow-sm">
       <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
         </svg>
         About the Retailer
@@ -34,7 +34,7 @@ export default function RetailerInfo({ retailer }: RetailerInfoProps) {
             href={retailer.websiteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors group"
+            className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 font-medium transition-colors group"
           >
             <span>Visit Website</span>
             <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

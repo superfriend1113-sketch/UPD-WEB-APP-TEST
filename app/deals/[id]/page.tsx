@@ -69,7 +69,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 md:py-12">
+    <main className="min-h-screen bg-white py-8">
       <div className="container mx-auto px-4 max-w-7xl">
         <DealDetail deal={deal} retailer={retailer} />
       </div>
