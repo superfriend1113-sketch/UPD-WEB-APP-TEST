@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Generate deal URLs
     const dealUrls = deals.map(deal => ({
       url: `${baseUrl}/deals/${deal.id}`,
-      lastModified: deal.updatedAt.toDate(),
+      lastModified: new Date(deal.updatedAt),
       changeFrequency: 'daily' as const,
       priority: 0.8,
     }));

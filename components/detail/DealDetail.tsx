@@ -18,18 +18,10 @@ interface DealDetailProps {
   retailer: Retailer;
 }
 
-/**
- * Convert plain timestamp object to Date
- */
-function timestampToDate(timestamp: any): Date {
-  if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp) {
-    return new Date(timestamp.seconds * 1000 + (timestamp.nanoseconds || 0) / 1000000);
-  }
-  return new Date();
-}
-
 function generateProductSchema(deal: Deal, retailer: Retailer) {
-  const expirationDate = timestampToDate(deal.expirationDate);
+  const expirationDate = deal.expirationDate instanceof Date 
+    ? deal.expirationDate 
+    : new Date(deal.expirationDate);
   
   return {
     '@context': 'https://schema.org',
@@ -53,7 +45,9 @@ function generateProductSchema(deal: Deal, retailer: Retailer) {
 
 export default function DealDetail({ deal, retailer }: DealDetailProps) {
   const isExpired = !isActiveDeal(deal);
-  const expirationDate = timestampToDate(deal.expirationDate);
+  const expirationDate = deal.expirationDate instanceof Date 
+    ? deal.expirationDate 
+    : new Date(deal.expirationDate);
 
   return (
     <>

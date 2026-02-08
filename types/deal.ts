@@ -3,7 +3,7 @@
  * Represents a product deal with discount information
  */
 
-import { Timestamp } from 'firebase/firestore';
+export type DealStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Deal {
   // Identifiers
@@ -12,7 +12,7 @@ export interface Deal {
   // Product Information
   productName: string;           // Max 200 characters
   description: string;            // Max 1000 characters
-  imageUrl: string;              // Firebase Storage or external URL
+  imageUrl: string;              // Supabase Storage or external URL
 
   // Pricing (stored in cents as integers)
   price: number;                 // e.g., 44999 = $449.99
@@ -22,19 +22,26 @@ export interface Deal {
   // Categorization
   category: string;              // Reference to category slug
   retailer: string;              // Reference to retailer slug
+  retailerId?: string;           // UUID reference to retailer (for ownership)
 
   // Deal Metadata
   dealUrl: string;               // External retailer link
-  expirationDate: Timestamp;     // Firebase Timestamp
+  expirationDate: Date | string; // Date or ISO string
 
   // Status
   isActive: boolean;             // True = visible to users
   isFeatured: boolean;           // True = show on homepage
 
+  // Approval Workflow
+  status: DealStatus;            // Pending, approved, or rejected
+  approvedAt?: Date | string | null;   // When deal was approved
+  approvedBy?: string | null;    // Admin user ID who approved
+  rejectionReason?: string | null;     // Why deal was rejected
+
   // Timestamps
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  createdBy: string;             // Admin email
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  createdBy?: string;            // User ID (admin or retailer)
 
   // Analytics
   viewCount: number;
@@ -99,17 +106,6 @@ export function validateDeal(deal: Partial<Deal>): string[] {
     }
   }
 
-  // Timestamp validation
-  if (deal.expirationDate && !(deal.expirationDate instanceof Timestamp)) {
-    errors.push('expirationDate must be a Firebase Timestamp');
-  }
-  if (deal.createdAt && !(deal.createdAt instanceof Timestamp)) {
-    errors.push('createdAt must be a Firebase Timestamp');
-  }
-  if (deal.updatedAt && !(deal.updatedAt instanceof Timestamp)) {
-    errors.push('updatedAt must be a Firebase Timestamp');
-  }
-
   return errors;
 }
 
@@ -130,24 +126,16 @@ export function formatPrice(priceInCents: number): string {
 
 /**
  * Check if a deal is active and not expired
- * Handles both Firestore Timestamp instances and plain timestamp objects
  */
 export function isActiveDeal(deal: Deal): boolean {
   if (!deal.isActive) return false;
   
   const now = Date.now();
-  const expirationDate = deal.expirationDate as any;
+  const expirationDate = typeof deal.expirationDate === 'string' 
+    ? new Date(deal.expirationDate).getTime()
+    : deal.expirationDate instanceof Date
+    ? deal.expirationDate.getTime()
+    : 0;
   
-  // Handle Firestore Timestamp instance
-  if (expirationDate && typeof expirationDate === 'object' && 'toMillis' in expirationDate) {
-    return expirationDate.toMillis() > now;
-  }
-  
-  // Handle plain timestamp object with seconds/nanoseconds
-  if (expirationDate && typeof expirationDate === 'object' && 'seconds' in expirationDate) {
-    const millis = expirationDate.seconds * 1000 + (expirationDate.nanoseconds || 0) / 1000000;
-    return millis > now;
-  }
-  
-  return false;
+  return expirationDate > now;
 }
