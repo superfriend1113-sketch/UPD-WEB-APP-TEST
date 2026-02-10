@@ -8,49 +8,82 @@ import { useAuth } from '@/components/auth/AuthProvider';
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [dealsMenuOpen, setDealsMenuOpen] = useState(false);
   const [aboutMenuOpen, setAboutMenuOpen] = useState(false);
   const { user, loading, signOut } = useAuth();
 
-  // Debug logging
-  useEffect(() => {
-    console.log('Header: Auth state', { hasUser: !!user, loading, userEmail: user?.email });
-  }, [user, loading]);
-
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-50 bg-gradient-to-r from-teal-50 to-orange-50 border-b border-gray-200">
       <nav className="container mx-auto px-4 sm:px-6 max-w-7xl">
-        <div className="flex items-center justify-between h-14 gap-6">
+        <div className="flex items-center justify-between h-16 gap-8">
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
-            <div className="relative w-8 h-8 rounded-md overflow-hidden">
-              <Image
-                src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=100&h=100&fit=crop"
-                alt="Logo"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Unlimited Perfect Deals"
+              width={180}
+              height={45}
+              className="h-11 w-auto"
+              priority
+            />
           </Link>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-md hidden md:block">
-            <form className="relative">
-              <input
-                type="text"
-                placeholder="Search deals"
-                className="w-full h-9 px-4 text-sm text-gray-900 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-gray-500"
-              />
-            </form>
-          </div>
-
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-6">
+          <div className="hidden lg:flex items-center flex-1 justify-center space-x-8">
+            {/* Deals Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setDealsMenuOpen(!dealsMenuOpen)}
+                onBlur={() => setTimeout(() => setDealsMenuOpen(false), 150)}
+                className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors flex items-center gap-1"
+              >
+                Shop Now
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {dealsMenuOpen && (
+                <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  <Link
+                    href="/deals"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                    onClick={() => setDealsMenuOpen(false)}
+                  >
+                    All Deals
+                  </Link>
+                  <Link
+                    href="/deals?category=electronics"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                    onClick={() => setDealsMenuOpen(false)}
+                  >
+                    Electronics
+                  </Link>
+                  <Link
+                    href="/deals?category=home-garden"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                    onClick={() => setDealsMenuOpen(false)}
+                  >
+                    Home & Garden
+                  </Link>
+                  <Link
+                    href="/deals?category=clothing"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                    onClick={() => setDealsMenuOpen(false)}
+                  >
+                    Fashion
+                  </Link>
+                </div>
+              )}
+            </div>
+
             <Link 
               href="/how-it-works" 
-              className="text-sm text-gray-700 hover:text-orange-600 font-medium transition-colors"
+              className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors flex items-center gap-1"
             >
               How It Works
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </Link>
             
             {/* About Dropdown */}
@@ -58,9 +91,9 @@ export default function Header() {
               <button
                 onClick={() => setAboutMenuOpen(!aboutMenuOpen)}
                 onBlur={() => setTimeout(() => setAboutMenuOpen(false), 150)}
-                className="text-sm text-gray-700 hover:text-orange-600 font-medium transition-colors flex items-center gap-1"
+                className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors flex items-center gap-1"
               >
-                About
+                About Us
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -69,21 +102,21 @@ export default function Header() {
                 <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                   <Link
                     href="/our-mission"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
                     onClick={() => setAboutMenuOpen(false)}
                   >
                     Our Mission
                   </Link>
                   <Link
                     href="/our-story"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
                     onClick={() => setAboutMenuOpen(false)}
                   >
                     Our Story
                   </Link>
                   <Link
                     href="/about"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
                     onClick={() => setAboutMenuOpen(false)}
                   >
                     About Us
@@ -94,25 +127,31 @@ export default function Header() {
             
             <Link 
               href="/partner" 
-              className="text-sm text-gray-700 hover:text-orange-600 font-medium transition-colors"
+              className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors flex items-center gap-1"
             >
-              Partner With Us
+              Contact Us
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </Link>
+          </div>
 
-            {/* Auth Buttons / User Menu */}
+          {/* Auth Buttons / User Menu */}
+          <div className="hidden lg:flex items-center gap-3">
             {!loading && (
               <>
                 {user ? (
                   <div className="relative">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-colors font-medium text-sm"
                     >
-                      <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">
+                      <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                        <span className="text-teal-600 text-xs font-bold">
                           {user.email?.charAt(0).toUpperCase()}
                         </span>
                       </div>
+                      <span>{user.user_metadata?.full_name?.split(' ')[0] || 'Account'}</span>
                     </button>
 
                     {/* User Dropdown Menu */}
@@ -126,21 +165,21 @@ export default function Header() {
                         </div>
                         <Link
                           href="/watchlist"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           My Watchlist
                         </Link>
                         <Link
                           href="/alerts"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           Price Alerts
                         </Link>
                         <Link
                           href="/profile"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           Profile Settings
@@ -158,20 +197,20 @@ export default function Header() {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3">
+                  <>
                     <Link
                       href="/auth/login"
-                      className="text-sm text-gray-700 hover:text-orange-600 font-medium transition-colors"
+                      className="px-5 py-2 bg-teal-900 text-white text-sm font-medium rounded-full hover:bg-teal-800 transition-colors"
                     >
-                      Login
+                      Log In
                     </Link>
                     <Link
                       href="/auth/signup"
-                      className="px-4 py-2 bg-teal-900 text-white text-sm font-medium rounded-lg hover:bg-teal-800 transition-colors"
+                      className="px-5 py-2 border-2 border-teal-600 text-teal-900 text-sm font-medium rounded-full hover:bg-teal-50 transition-colors"
                     >
-                      Sign Up
+                      Get started
                     </Link>
-                  </div>
+                  </>
                 )}
               </>
             )}
@@ -180,7 +219,7 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 shrink-0"
+            className="lg:hidden p-2 rounded-lg hover:bg-white/50 shrink-0"
           >
             <svg
               className="w-6 h-6 text-gray-700"
@@ -210,18 +249,18 @@ export default function Header() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-gray-200">
-            {/* Mobile Search */}
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Search deals"
-                className="w-full h-10 px-4 text-sm text-gray-900 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
             <div className="flex flex-col space-y-3">
               <Link
+                href="/deals"
+                className="text-sm text-gray-700 hover:text-teal-900 font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Shop Now
+              </Link>
+              
+              <Link
                 href="/how-it-works"
-                className="text-sm text-gray-700 hover:text-orange-600 font-medium"
+                className="text-sm text-gray-700 hover:text-teal-900 font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 How It Works
@@ -235,21 +274,21 @@ export default function Header() {
                 <div className="flex flex-col space-y-3 pl-2">
                   <Link
                     href="/our-mission"
-                    className="text-sm text-gray-700 hover:text-orange-600 font-medium"
+                    className="text-sm text-gray-700 hover:text-teal-900 font-medium"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Our Mission
                   </Link>
                   <Link
                     href="/our-story"
-                    className="text-sm text-gray-700 hover:text-orange-600 font-medium"
+                    className="text-sm text-gray-700 hover:text-teal-900 font-medium"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Our Story
                   </Link>
                   <Link
                     href="/about"
-                    className="text-sm text-gray-700 hover:text-orange-600 font-medium"
+                    className="text-sm text-gray-700 hover:text-teal-900 font-medium"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     About Us
@@ -259,10 +298,10 @@ export default function Header() {
               
               <Link
                 href="/partner"
-                className="text-sm text-gray-700 hover:text-orange-600 font-medium pt-3"
+                className="text-sm text-gray-700 hover:text-teal-900 font-medium pt-3"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Partner With Us
+                Contact Us
               </Link>
 
               {/* Mobile Auth Buttons / User Menu */}
@@ -277,21 +316,21 @@ export default function Header() {
                       </div>
                       <Link
                         href="/watchlist"
-                        className="text-sm text-gray-700 hover:text-orange-600 font-medium"
+                        className="text-sm text-gray-700 hover:text-teal-900 font-medium"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         My Watchlist
                       </Link>
                       <Link
                         href="/alerts"
-                        className="text-sm text-gray-700 hover:text-orange-600 font-medium"
+                        className="text-sm text-gray-700 hover:text-teal-900 font-medium"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Price Alerts
                       </Link>
                       <Link
                         href="/profile"
-                        className="text-sm text-gray-700 hover:text-orange-600 font-medium"
+                        className="text-sm text-gray-700 hover:text-teal-900 font-medium"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Profile Settings
@@ -311,17 +350,17 @@ export default function Header() {
                       <div className="pt-3 mt-3 border-t border-gray-200 flex flex-col gap-3">
                         <Link
                           href="/auth/login"
-                          className="text-center px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                          className="text-center px-5 py-2 bg-teal-900 text-white text-sm font-medium rounded-full hover:bg-teal-800 transition-colors"
                           onClick={() => setMobileMenuOpen(false)}
                         >
-                          Login
+                          Log In
                         </Link>
                         <Link
                           href="/auth/signup"
-                          className="text-center px-4 py-2 bg-teal-900 text-white text-sm font-medium rounded-lg hover:bg-teal-800 transition-colors"
+                          className="text-center px-5 py-2 border-2 border-teal-600 text-teal-900 text-sm font-medium rounded-full hover:bg-teal-50 transition-colors"
                           onClick={() => setMobileMenuOpen(false)}
                         >
-                          Sign Up
+                          Get started
                         </Link>
                       </div>
                     </>

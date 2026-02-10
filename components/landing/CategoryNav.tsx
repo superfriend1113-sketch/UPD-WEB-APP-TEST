@@ -3,64 +3,61 @@
  * Displays category navigation on the landing page
  */
 
+'use client';
+
 import Link from 'next/link';
-import Image from 'next/image';
+import { useState } from 'react';
 import type { Category } from '@/types/category';
 
 interface CategoryNavProps {
   categories: Category[];
 }
 
-const categoryImages: Record<string, string> = {
-  'electronics': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=200&h=200&fit=crop',
-  'home-garden': 'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=200&h=200&fit=crop',
-  'clothing': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=200&h=200&fit=crop',
-  'health-beauty': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&fit=crop',
-  'sports-outdoors': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200&h=200&fit=crop',
-};
-
 export default function CategoryNav({ categories }: CategoryNavProps) {
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Add "All" category at the beginning
+  const allCategories = [
+    { id: 'all', name: 'All Deals', slug: '' },
+    ...categories.slice(0, 4), // Show first 4 categories
+    { id: 'more', name: 'More', slug: 'more' }
+  ];
+
   return (
-    <section className="py-8 bg-white border-b border-gray-100">
+    <section className="pt-12 pb-6 md:pt-16 md:pb-8 bg-gradient-to-br from-purple-50 via-gray-50 to-teal-50">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
         {/* Section Header */}
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Explore popular categories
+        <div className="mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 flex items-start gap-2">
+            Stylish Collection of Deals
+            <svg className="w-8 h-8 text-teal-600 mt-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" strokeWidth="2" className="text-purple-400"/>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="9" cy="9" r="1" fill="currentColor"/>
+              <circle cx="15" cy="9" r="1" fill="currentColor"/>
+            </svg>
           </h2>
-          <Link
-            href="/deals"
-            className="text-sm font-medium text-teal-900 hover:text-teal-800 hidden sm:block"
-          >
-            See all categories
-          </Link>
+          <p className="text-gray-600 max-w-2xl">
+            Discover unbeatable deals on quality products from trusted retailers — clearance inventory at exceptional value.
+          </p>
         </div>
 
-        {/* Categories Horizontal Scroll */}
-        <div className="-mx-4 sm:mx-0">
-          <div className="flex gap-3 overflow-x-auto pb-4 px-4 sm:px-0 scrollbar-hide sm:grid sm:grid-cols-5 sm:gap-4">
-            {categories.map(category => (
-              <Link
-                key={category.id}
-                href={`/deals?category=${category.slug}`}
-                className="group flex-shrink-0 w-32 sm:w-auto bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-teal-900 hover:shadow-md transition-all"
-              >
-                <div className="relative aspect-square w-full bg-gray-100">
-                  <Image
-                    src={categoryImages[category.slug] || 'https://images.unsplash.com/photo-1486401899868-0e435ed85128?w=200&h=200&fit=crop'}
-                    alt={category.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-3 text-center">
-                  <h3 className="text-xs font-medium text-gray-900 line-clamp-2">
-                    {category.name}
-                  </h3>
-                </div>
-              </Link>
-            ))}
-          </div>
+        {/* Category Pills */}
+        <div className="flex flex-wrap gap-3 mb-8">
+          {allCategories.map((category) => (
+            <Link
+              key={category.id}
+              href={category.slug ? `/deals?category=${category.slug}` : '/deals'}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all ${
+                selectedCategory === category.id || (category.id === 'all' && selectedCategory === 'all')
+                  ? 'bg-gray-900 text-white shadow-md'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {category.name}
+            </Link>
+          ))}
         </div>
       </div>
     </section>

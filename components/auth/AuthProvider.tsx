@@ -34,16 +34,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log('AuthProvider: getSession called', {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        userEmail: session?.user?.email,
-        userRole: session?.user?.user_metadata?.role,
-        error
-      });
+      // Ignore expected errors like expired refresh tokens
+      if (error && error.message !== 'Invalid Refresh Token: Refresh Token Not Found') {
+        console.error('AuthProvider: getSession error', error);
+      }
       
       setSession(session);
       setUser(session?.user ?? null);
+      setLoading(false);
+    }).catch((err) => {
+      // Catch any unexpected errors to prevent app crashes
+      console.error('AuthProvider: getSession failed', err);
       setLoading(false);
     });
 
@@ -52,7 +53,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // TOKEN_REFRESHED events from causing unnecessary re-renders.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      // Handle sign out
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setSession(null);
+        setLoading(false);
+        return;
+      }
+
+      // Update state only when user actually changes
       setUser(prev => {
         const newUser = newSession?.user ?? null;
         if (prev?.id === newUser?.id) return prev;

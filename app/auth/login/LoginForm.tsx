@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import Button from '@/components/common/Button';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/lib/supabase/config';
@@ -60,14 +61,24 @@ export default function LoginForm() {
       setLoading(true);
       setError('');
       
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      console.log('OAuth redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('OAuth error:', error);
+        throw error;
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in with Google');
       setLoading(false);
@@ -147,13 +158,23 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="bg-white rounded-2xl shadow-xl p-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
-          <p className="text-gray-600">Sign in to access your account</p>
-        </div>
+    <div className="w-full">
+      {/* Mobile Logo */}
+      <div className="lg:hidden flex justify-center mb-8">
+        <Image
+          src="/logo.png"
+          alt="Unlimited Perfect Deals"
+          width={180}
+          height={45}
+          className="h-11 w-auto"
+        />
+      </div>
+      
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
+        <p className="text-gray-600">Sign in to access your personalized deals</p>
+      </div>
 
         {/* Error Message */}
         {error && (
@@ -166,7 +187,7 @@ export default function LoginForm() {
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6"
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -211,7 +232,7 @@ export default function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
               placeholder="you@example.com"
             />
           </div>
@@ -226,7 +247,7 @@ export default function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
               placeholder="••••••••"
             />
           </div>
@@ -236,13 +257,13 @@ export default function LoginForm() {
               <input
                 id="remember"
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
               />
               <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
                 Remember me
               </label>
             </div>
-            <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
+            <Link href="/auth/forgot-password" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
               Forgot password?
             </Link>
           </div>
@@ -255,11 +276,10 @@ export default function LoginForm() {
         {/* Sign Up Link */}
         <p className="mt-6 text-center text-sm text-gray-600">
           Don't have an account?{' '}
-          <Link href="/auth/signup" className="text-blue-600 hover:text-blue-500 font-medium">
+          <Link href="/auth/signup" className="text-teal-600 hover:text-teal-700 font-medium">
             Sign up
           </Link>
         </p>
       </div>
-    </div>
   );
 }

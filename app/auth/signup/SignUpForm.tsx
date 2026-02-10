@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { signInWithGoogle, signUpWithEmail } from '@/lib/auth';
 import Button from '@/components/common/Button';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -65,8 +66,25 @@ export default function SignUpForm() {
     try {
       setLoading(true);
       setError('');
-      // Google OAuth only available for personal accounts
-      await signInWithGoogle();
+      
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      console.log('OAuth redirect URL:', redirectUrl);
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        console.error('OAuth error:', error);
+        throw error;
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign up with Google');
       setLoading(false);
@@ -207,8 +225,8 @@ export default function SignUpForm() {
 
   if (success) {
     return (
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+      <div className="w-full">
+        <div className="text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -228,26 +246,36 @@ export default function SignUpForm() {
   }
 
   return (
-    <div className="w-full max-w-md">
-      <div className="bg-white rounded-2xl shadow-xl p-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create an account</h1>
-          <p className="text-gray-600">Join us as a customer or retailer</p>
-        </div>
+    <div className="w-full">
+      {/* Mobile Logo */}
+      <div className="lg:hidden flex justify-center mb-8">
+        <Image
+          src="/logo.png"
+          alt="Unlimited Perfect Deals"
+          width={180}
+          height={45}
+          className="h-11 w-auto"
+        />
+      </div>
+      
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create an account</h1>
+        <p className="text-gray-600">Join us as a customer or retailer</p>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex mb-6 border-b border-gray-200">
-          <button
-            type="button"
-            onClick={() => {
-              setAccountType('personal');
-              setError('');
-            }}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
-              accountType === 'personal'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
+      {/* Tabs */}
+      <div className="flex mb-6 border-b border-gray-200">
+        <button
+          type="button"
+          onClick={() => {
+            setAccountType('personal');
+            setError('');
+          }}
+          className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
+            accountType === 'personal'
+              ? 'text-teal-600 border-b-2 border-teal-600'
+              : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             Personal
@@ -260,7 +288,7 @@ export default function SignUpForm() {
             }}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
               accountType === 'business'
-                ? 'text-blue-600 border-b-2 border-blue-600'
+              ? 'text-teal-600 border-b-2 border-teal-600'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -282,7 +310,7 @@ export default function SignUpForm() {
             <button
               onClick={handleGoogleSignUp}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -327,7 +355,7 @@ export default function SignUpForm() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
                   placeholder="John Doe"
                 />
               </div>
@@ -342,7 +370,7 @@ export default function SignUpForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
                   placeholder="you@example.com"
                 />
               </div>
@@ -358,7 +386,7 @@ export default function SignUpForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
                   placeholder="••••••••"
                 />
               </div>
@@ -374,7 +402,7 @@ export default function SignUpForm() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
                   placeholder="••••••••"
                 />
               </div>
@@ -399,7 +427,7 @@ export default function SignUpForm() {
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
                 placeholder="Your Business Name"
               />
             </div>
@@ -414,7 +442,7 @@ export default function SignUpForm() {
                 value={businessEmail}
                 onChange={(e) => setBusinessEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
                 placeholder="business@company.com"
               />
             </div>
@@ -428,7 +456,7 @@ export default function SignUpForm() {
                 type="url"
                 value={websiteUrl}
                 onChange={(e) => setWebsiteUrl(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
                 placeholder="https://yourwebsite.com"
               />
             </div>
@@ -445,7 +473,7 @@ export default function SignUpForm() {
                 max="100"
                 value={commission}
                 onChange={(e) => setCommission(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
                 placeholder="10.00"
               />
             </div>
@@ -461,7 +489,7 @@ export default function SignUpForm() {
                 onChange={(e) => setBusinessPassword(e.target.value)}
                 required
                 minLength={8}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
                 placeholder="••••••••"
               />
               <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
@@ -478,7 +506,7 @@ export default function SignUpForm() {
                 onChange={(e) => setBusinessConfirmPassword(e.target.value)}
                 required
                 minLength={8}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900"
                 placeholder="••••••••"
               />
             </div>
@@ -496,11 +524,10 @@ export default function SignUpForm() {
         {/* Login Link */}
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-blue-600 hover:text-blue-500 font-medium">
+          <Link href="/auth/login" className="text-teal-600 hover:text-teal-700 font-medium">
             Sign in
           </Link>
         </p>
       </div>
-    </div>
   );
 }
