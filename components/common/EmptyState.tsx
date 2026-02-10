@@ -4,13 +4,28 @@
  */
 
 import { ReactNode } from 'react';
+import Link from 'next/link';
 
 interface EmptyStateProps {
-  message: string;
+  title?: string;
+  message?: string;
+  description?: string;
   action?: ReactNode;
+  actionLabel?: string;
+  actionHref?: string;
 }
 
-export default function EmptyState({ message, action }: EmptyStateProps) {
+export default function EmptyState({ 
+  title, 
+  message, 
+  description, 
+  action, 
+  actionLabel, 
+  actionHref 
+}: EmptyStateProps) {
+  const displayTitle = title || 'No deals found';
+  const displayMessage = description || message || 'Try adjusting your filters or check back later.';
+  
   return (
     <div className="flex flex-col items-center justify-center py-20 px-4 bg-white rounded-xl shadow-md border border-gray-100">
       <div className="text-center max-w-md">
@@ -31,10 +46,18 @@ export default function EmptyState({ message, action }: EmptyStateProps) {
           </svg>
         </div>
         <h3 className="text-2xl font-bold text-gray-900 mb-3">
-          No deals found
+          {displayTitle}
         </h3>
-        <p className="text-gray-600 mb-8 text-lg">{message}</p>
+        <p className="text-gray-600 mb-8 text-lg">{displayMessage}</p>
         {action && <div>{action}</div>}
+        {!action && actionLabel && actionHref && (
+          <Link
+            href={actionHref}
+            className="inline-flex items-center px-6 py-3 bg-teal-900 text-white font-medium rounded-lg hover:bg-teal-800 transition-colors"
+          >
+            {actionLabel}
+          </Link>
+        )}
       </div>
     </div>
   );

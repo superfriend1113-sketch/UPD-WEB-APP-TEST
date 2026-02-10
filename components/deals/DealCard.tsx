@@ -7,16 +7,70 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Deal } from '@/types/deal';
 import { formatPrice } from '@/types/deal';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { addToWatchlist, removeFromWatchlist, isInWatchlist } from '@/lib/actions/watchlist';
+import DealBadges from './DealBadges';
 
 interface DealCardProps {
   deal: Deal;
+  initialInWatchlist?: boolean;
+  onWatchlistChange?: (dealId: string) => void;
 }
 
-export default function DealCard({ deal }: DealCardProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+export default function DealCard({ deal, initialInWatchlist = false, onWatchlistChange }: DealCardProps) {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [isWishlisted, setIsWishlisted] = useState(initialInWatchlist);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Check if deal is in watchlist on mount (if authenticated)
+  useEffect(() => {
+    if (user && !initialInWatchlist) {
+      checkWatchlistStatus();
+    }
+  }, [user, deal.id]);
+
+  const checkWatchlistStatus = async () => {
+    try {
+      const inWatchlist = await isInWatchlist(deal.id);
+      setIsWishlisted(inWatchlist);
+    } catch (error) {
+      console.error('Error checking watchlist status:', error);
+    }
+  };
+
+  const handleWishlistClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Redirect to login if not authenticated
+    if (!user) {
+      router.push('/auth/login?redirect=' + encodeURIComponent(window.location.pathname));
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      if (isWishlisted) {
+        await removeFromWatchlist(deal.id);
+        setIsWishlisted(false);
+        onWatchlistChange?.(deal.id);
+      } else {
+        await addToWatchlist(deal.id);
+        setIsWishlisted(true);
+      }
+    } catch (error) {
+      console.error('Error updating watchlist:', error);
+      // Revert optimistic update on error
+      setIsWishlisted(!isWishlisted);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="group">
@@ -34,15 +88,13 @@ export default function DealCard({ deal }: DealCardProps) {
           
           {/* Wishlist Button */}
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              setIsWishlisted(!isWishlisted);
-            }}
-            className="absolute top-3 right-3 w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition-transform"
-            aria-label="Add to wishlist"
+            onClick={handleWishlistClick}
+            disabled={isLoading}
+            className="absolute top-3 right-3 w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label={isWishlisted ? 'Remove from watchlist' : 'Add to watchlist'}
           >
             <svg
-              className={`w-5 h-5 ${
+              className={`w-5 h-5 transition-colors ${
                 isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none text-gray-900'
               }`}
               stroke="currentColor"
@@ -63,6 +115,9 @@ export default function DealCard({ deal }: DealCardProps) {
               {deal.savingsPercentage}% off
             </div>
           )}
+
+          {/* Urgency Badges */}
+          <DealBadges deal={deal} className="absolute top-3 left-3" />
         </div>
 
         {/* Deal Information */}

@@ -1,45 +1,37 @@
 /**
  * Supabase Client SDK Configuration
- * Initializes and exports Supabase instance for the User Web App
+ * Uses @supabase/ssr for cookie-based sessions shared between client and server
  */
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { loadSupabaseEnv } from './env';
+import { createBrowserClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 let supabaseClient: SupabaseClient | undefined;
 
 /**
- * Initialize Supabase with configuration from environment variables
- * Uses singleton pattern to prevent multiple initializations
+ * Initialize Supabase browser client with cookie-based session storage
+ * This ensures sessions are readable by both client and server components
  */
 export function initializeSupabase(): SupabaseClient {
-  // Return existing client if already initialized
   if (supabaseClient) {
     return supabaseClient;
   }
 
-  try {
-    const config = loadSupabaseEnv();
-    
-    supabaseClient = createClient(config.url, config.anonKey, {
-      auth: {
-        persistSession: false, // User web app doesn't need authentication
-        autoRefreshToken: false,
-      },
-    });
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    console.log('Supabase initialized successfully');
-    return supabaseClient;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Supabase initialization failed:', errorMessage);
-    throw new Error(`Supabase initialization failed: ${errorMessage}`);
+  if (!url || !anonKey) {
+    throw new Error(
+      'Missing Supabase environment variables. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'
+    );
   }
+
+  supabaseClient = createBrowserClient(url, anonKey);
+  return supabaseClient;
 }
 
 /**
  * Get Supabase client instance
- * Initializes Supabase if not already initialized
  */
 export function getSupabase(): SupabaseClient {
   if (!supabaseClient) {

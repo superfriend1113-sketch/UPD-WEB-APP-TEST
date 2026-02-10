@@ -57,16 +57,31 @@ export default function Footer() {
 
           {/* Categories */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Categories</h3>
+            <h3 className="text-white font-semibold mb-4">Company</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/deals?category=health-beauty" className="hover:text-white transition-colors">
-                  Health & Beauty
+                <Link href="/about" className="hover:text-white transition-colors">
+                  About Us
                 </Link>
               </li>
               <li>
-                <Link href="/deals?category=sports-outdoors" className="hover:text-white transition-colors">
-                  Sports & Outdoors
+                <Link href="/our-mission" className="hover:text-white transition-colors">
+                  Our Mission
+                </Link>
+              </li>
+              <li>
+                <Link href="/our-story" className="hover:text-white transition-colors">
+                  Our Story
+                </Link>
+              </li>
+              <li>
+                <Link href="/partner" className="hover:text-white transition-colors">
+                  Partner With Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/how-it-works" className="hover:text-white transition-colors">
+                  How It Works
                 </Link>
               </li>
             </ul>
@@ -79,10 +94,13 @@ export default function Footer() {
             © {new Date().getFullYear()} Unlimited Perfect Deals. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
+            <Link href="/legal" className="text-gray-400 hover:text-white text-sm transition-colors">
+              Legal
+            </Link>
+            <Link href="/legal/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">
               Privacy Policy
             </Link>
-            <Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
+            <Link href="/legal/terms" className="text-gray-400 hover:text-white text-sm transition-colors">
               Terms of Service
             </Link>
           </div>

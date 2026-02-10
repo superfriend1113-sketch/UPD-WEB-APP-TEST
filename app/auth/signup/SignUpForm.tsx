@@ -1,0 +1,506 @@
+/**
+ * Sign Up Form Component
+ * Handles Personal and Business account registration
+ * Features tabbed interface similar to eBay
+ */
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { signInWithGoogle, signUpWithEmail } from '@/lib/auth';
+import Button from '@/components/common/Button';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/lib/supabase/config';
+import { slugify } from '@/lib/utils';
+
+type AccountType = 'personal' | 'business';
+
+export default function SignUpForm() {
+  // Tab state
+  const [accountType, setAccountType] = useState<AccountType>('personal');
+  
+  // Personal account fields
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // Business account fields
+  const [businessEmail, setBusinessEmail] = useState('');
+  const [businessPassword, setBusinessPassword] = useState('');
+  const [businessConfirmPassword, setBusinessConfirmPassword] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [commission, setCommission] = useState('');
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && user) {
+      const checkRole = async () => {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('role, retailer_id')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.role === 'retailer') {
+          window.location.href = '/retailer/dashboard';
+        } else {
+          window.location.href = '/';
+        }
+      };
+      checkRole();
+    }
+  }, [user, authLoading, router, supabase]);
+
+  const handleGoogleSignUp = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      // Google OAuth only available for personal accounts
+      await signInWithGoogle();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sign up with Google');
+      setLoading(false);
+    }
+  };
+
+  const handlePersonalSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      const { user, session } = await signUpWithEmail(email, password, fullName, 'consumer');
+      
+      console.log('Signup result:', { hasUser: !!user, hasSession: !!session });
+      
+      // Check if email confirmation is required
+      if (user && !session) {
+        setError('Please check your email to confirm your account before signing in.');
+        setLoading(false);
+        return;
+      }
+      
+      setSuccess(true);
+      // Wait briefly then redirect to home
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      window.location.href = '/';
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sign up');
+      setLoading(false);
+    }
+  };
+
+  const handleBusinessSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (businessPassword !== businessConfirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (businessPassword.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
+    if (!businessName.trim()) {
+      setError('Business name is required');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+
+      // 1. Create auth user with retailer role
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: businessEmail,
+        password: businessPassword,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            role: 'retailer',
+            business_name: businessName,
+          }
+        },
+      });
+
+      if (signUpError) {
+        const errorMessage = signUpError.message.toLowerCase();
+        
+        if (errorMessage.includes('email rate limit exceeded')) {
+          setError('Too many signup attempts. Please wait 5-10 minutes before trying again.');
+        } else if (errorMessage.includes('user already registered') || errorMessage.includes('already registered')) {
+          setError('This email is already registered. Please sign in instead or use a different email address.');
+        } else if (errorMessage.includes('invalid email')) {
+          setError('Please enter a valid email address.');
+        } else {
+          setError(signUpError.message);
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (!authData.user) {
+        setError('Failed to create account');
+        setLoading(false);
+        return;
+      }
+
+      // 2. Create retailer account using database function
+      const slug = slugify(businessName);
+
+      const { error: retailerError } = await supabase.rpc('create_retailer_account', {
+        p_user_id: authData.user.id,
+        p_email: businessEmail,
+        p_business_name: businessName,
+        p_slug: slug,
+        p_website_url: websiteUrl || null,
+        p_commission: parseFloat(commission) || 0,
+      });
+
+      if (retailerError) {
+        const errorMessage = (retailerError.message || String(retailerError)).toLowerCase();
+        
+        if (errorMessage.includes('already registered') || errorMessage.includes('duplicate')) {
+          setError('An account with this information already exists. Please sign in or contact support.');
+        } else {
+          setError('Failed to create retailer account: ' + retailerError.message);
+        }
+        setLoading(false);
+        return;
+      }
+
+      setSuccess(true);
+      
+      // Wait briefly for database operations to complete, then redirect
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Redirect to retailer pending page (full page load to get retailer layout)
+      window.location.href = '/retailer/pending';
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {accountType === 'personal' ? 'Account Created!' : 'Application Submitted!'}
+          </h2>
+          <p className="text-gray-600">
+            {accountType === 'personal' 
+              ? 'Please check your email to verify your account.' 
+              : 'Your retailer application is being reviewed. You\'ll receive an email once approved.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-md">
+      <div className="bg-white rounded-2xl shadow-xl p-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create an account</h1>
+          <p className="text-gray-600">Join us as a customer or retailer</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex mb-6 border-b border-gray-200">
+          <button
+            type="button"
+            onClick={() => {
+              setAccountType('personal');
+              setError('');
+            }}
+            className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
+              accountType === 'personal'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Personal
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAccountType('business');
+              setError('');
+            }}
+            className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
+              accountType === 'business'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Business
+          </button>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+
+        {/* Personal Account Form */}
+        {accountType === 'personal' && (
+          <>
+            {/* Google Sign Up */}
+            <button
+              onClick={handleGoogleSignUp}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
+              <span className="font-medium text-gray-700">Continue with Google</span>
+            </button>
+
+            {/* Divider */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-gray-500">Or sign up with email</span>
+              </div>
+            </div>
+
+            {/* Email Form */}
+            <form onSubmit={handlePersonalSignUp} className="space-y-4">
+              <div>
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <input
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  placeholder="John Doe"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? 'Creating account...' : 'Create personal account'}
+              </Button>
+            </form>
+          </>
+        )}
+
+        {/* Business Account Form */}
+        {accountType === 'business' && (
+          <form onSubmit={handleBusinessSignUp} className="space-y-4">
+            <div>
+              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-2">
+                Business Name
+              </label>
+              <input
+                id="businessName"
+                type="text"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                placeholder="Your Business Name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="businessEmail" className="block text-sm font-medium text-gray-700 mb-2">
+                Business Email
+              </label>
+              <input
+                id="businessEmail"
+                type="email"
+                value={businessEmail}
+                onChange={(e) => setBusinessEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                placeholder="business@company.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="websiteUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                Website URL <span className="text-gray-500">(optional)</span>
+              </label>
+              <input
+                id="websiteUrl"
+                type="url"
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                placeholder="https://yourwebsite.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="commission" className="block text-sm font-medium text-gray-700 mb-2">
+                Commission (%) <span className="text-gray-500">(optional)</span>
+              </label>
+              <input
+                id="commission"
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={commission}
+                onChange={(e) => setCommission(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                placeholder="10.00"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="businessPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                id="businessPassword"
+                type="password"
+                value={businessPassword}
+                onChange={(e) => setBusinessPassword(e.target.value)}
+                required
+                minLength={8}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                placeholder="••••••••"
+              />
+              <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
+            </div>
+
+            <div>
+              <label htmlFor="businessConfirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password
+              </label>
+              <input
+                id="businessConfirmPassword"
+                type="password"
+                value={businessConfirmPassword}
+                onChange={(e) => setBusinessConfirmPassword(e.target.value)}
+                required
+                minLength={8}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? 'Submitting application...' : 'Create business account'}
+            </Button>
+
+            <p className="text-xs text-gray-500 text-center">
+              By submitting, you agree to our retailer terms and conditions. Your account will be reviewed and approved by our team.
+            </p>
+          </form>
+        )}
+
+        {/* Login Link */}
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Already have an account?{' '}
+          <Link href="/auth/login" className="text-blue-600 hover:text-blue-500 font-medium">
+            Sign in
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}

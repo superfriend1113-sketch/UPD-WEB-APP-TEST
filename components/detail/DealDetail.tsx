@@ -12,6 +12,8 @@ import type { Retailer } from '@/types/retailer';
 import { formatPrice, isActiveDeal } from '@/types/deal';
 import Button from '@/components/common/Button';
 import RetailerInfo from './RetailerInfo';
+import PriceAlertButton from './PriceAlertButton';
+import DealBadges from '@/components/deals/DealBadges';
 
 interface DealDetailProps {
   deal: Deal;
@@ -100,6 +102,9 @@ export default function DealDetail({ deal, retailer }: DealDetailProps) {
             <div className="absolute top-4 right-4 bg-orange-500 text-white px-4 py-2 rounded-lg text-lg font-bold shadow-lg">
               {deal.savingsPercentage}% OFF
             </div>
+
+            {/* Urgency Badges */}
+            <DealBadges deal={deal} className="absolute top-4 left-4" />
           </div>
 
           {/* Product Information */}
@@ -164,7 +169,7 @@ export default function DealDetail({ deal, retailer }: DealDetailProps) {
             </div>
 
             {/* View Deal Button */}
-            <div className="mb-6">
+            <div className="mb-4">
               <a
                 href={deal.dealUrl}
                 target="_blank"
@@ -190,6 +195,13 @@ export default function DealDetail({ deal, retailer }: DealDetailProps) {
                 </p>
               )}
             </div>
+
+            {/* Price Alert Button */}
+            {!isExpired && (
+              <div className="mb-6">
+                <PriceAlertButton dealId={deal.id} currentPrice={deal.price} />
+              </div>
+            )}
 
             {/* Retailer Info */}
             <RetailerInfo retailer={retailer} />
