@@ -278,7 +278,7 @@ export default function SignUpForm() {
               : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            Personal
+            Consumer
           </button>
           <button
             type="button"
@@ -292,7 +292,7 @@ export default function SignUpForm() {
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            Business
+            Retailer
           </button>
         </div>
 
@@ -303,6 +303,8 @@ export default function SignUpForm() {
           </div>
         )}
 
+        {/* Forms Container with Fixed Height */}
+        <div className="min-h-[750px]">
         {/* Personal Account Form */}
         {accountType === 'personal' && (
           <>
@@ -408,7 +410,7 @@ export default function SignUpForm() {
               </div>
 
               <Button type="submit" disabled={loading} className="w-full">
-                {loading ? 'Creating account...' : 'Create personal account'}
+                {loading ? 'Creating account...' : 'Create consumer account'}
               </Button>
             </form>
           </>
@@ -512,7 +514,7 @@ export default function SignUpForm() {
             </div>
 
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? 'Submitting application...' : 'Create business account'}
+              {loading ? 'Submitting application...' : 'Create retailer account'}
             </Button>
 
             <p className="text-xs text-gray-500 text-center">
@@ -520,6 +522,7 @@ export default function SignUpForm() {
             </p>
           </form>
         )}
+        </div>
 
         {/* Login Link */}
         <p className="mt-6 text-center text-sm text-gray-600">

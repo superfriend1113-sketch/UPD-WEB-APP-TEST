@@ -7,9 +7,10 @@ import Footer from './Footer';
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isRetailerRoute = pathname?.startsWith('/retailer');
+  const isAuthRoute = pathname === '/auth/login' || pathname === '/auth/signup';
 
-  // Retailer routes don't show consumer header/footer
-  if (isRetailerRoute) {
+  // Retailer routes and auth pages don't show consumer header/footer
+  if (isRetailerRoute || isAuthRoute) {
     return <>{children}</>;
   }
 

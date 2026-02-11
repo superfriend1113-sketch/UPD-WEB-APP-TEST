@@ -78,12 +78,9 @@ export default function Header() {
 
             <Link 
               href="/how-it-works" 
-              className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors flex items-center gap-1"
+              className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors"
             >
               How It Works
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
             </Link>
             
             {/* About Dropdown */}
@@ -127,12 +124,9 @@ export default function Header() {
             
             <Link 
               href="/partner" 
-              className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors flex items-center gap-1"
+              className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors"
             >
               Contact Us
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
             </Link>
           </div>
 

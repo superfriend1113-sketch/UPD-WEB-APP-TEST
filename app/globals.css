@@ -44,3 +44,18 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
+
+/* Slide Animation - Left to Right */
+@keyframes slide-left-right {
+  0% {
+    transform: scale(1.2) translateX(-3%);
+  }
+  100% {
+    transform: scale(1.2) translateX(3%);
+  }
+}
+
+.animate-slide-lr {
+  animation: slide-left-right 25s ease-in-out infinite alternate;
+  transform-origin: center center;
+}
