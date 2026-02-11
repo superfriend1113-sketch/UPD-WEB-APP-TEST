@@ -28,31 +28,8 @@ export async function GET(request: Request) {
         data: { role: 'consumer' }
       });
     }
-
-    // Redirect retailers to their portal
-    if (userRole === 'retailer') {
-      // Check approval status
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('retailer_id')
-        .eq('id', data.user!.id)
-        .single();
-
-      if (profile?.retailer_id) {
-        const { data: retailer } = await supabase
-          .from('retailers')
-          .select('status')
-          .eq('id', profile.retailer_id)
-          .single();
-
-        if (retailer?.status === 'approved') {
-          return NextResponse.redirect(new URL('/retailer/dashboard', requestUrl.origin));
-        }
-      }
-      return NextResponse.redirect(new URL('/retailer/pending', requestUrl.origin));
-    }
   }
 
-  // Default: redirect consumers to homepage
+  // Redirect all users to homepage
   return NextResponse.redirect(new URL('/', requestUrl.origin));
 }

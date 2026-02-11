@@ -25,23 +25,9 @@ export default function LoginForm() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && user) {
-      // Fetch role and redirect appropriately
-      const checkRole = async () => {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('role, retailer_id')
-          .eq('id', user.id)
-          .single();
-
-        if (profile?.role === 'retailer') {
-          window.location.href = '/retailer/dashboard';
-        } else {
-          window.location.href = '/';
-        }
-      };
-      checkRole();
+      window.location.href = '/';
     }
-  }, [user, authLoading, router, supabase]);
+  }, [user, authLoading]);
 
   useEffect(() => {
     const errorParam = searchParams.get('error');
@@ -124,30 +110,15 @@ export default function LoginForm() {
       const userRole = profile?.role;
 
       // Role-based redirect logic
-      if (userRole === 'retailer') {
-        // Check if retailer is approved
-        if (profile.retailer_id) {
-          const { data: retailer } = await supabase
-            .from('retailers')
-            .select('status')
-            .eq('id', profile.retailer_id)
-            .single();
-
-          if (retailer?.status === 'pending' || retailer?.status === 'rejected') {
-            window.location.href = '/retailer/pending';
-            return;
-          }
-        }
-        
-        window.location.href = '/retailer/dashboard';
-      } else if (userRole === 'consumer') {
-        window.location.href = '/';
-      } else if (userRole === 'admin') {
+      if (userRole === 'admin') {
         // Admin should use separate admin panel
         await supabase.auth.signOut();
         setError('Admin accounts should use the admin panel to sign in.');
         setLoading(false);
         return;
+      } else if (userRole === 'retailer' || userRole === 'consumer') {
+        // All users go to home page
+        window.location.href = '/';
       } else {
         throw new Error('Invalid user role');
       }

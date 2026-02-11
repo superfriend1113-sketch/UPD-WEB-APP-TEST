@@ -35,7 +35,51 @@ export default async function PendingPage() {
     redirect('/auth/login?error=unauthorized');
   }
 
-  // If approved, redirect to dashboard
+  // If no retailer_id linked, show error state
+  if (!profile.retailer_id) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="max-w-lg w-full">
+          {/* 3D Ribbon */}
+          <div className="flex justify-center mb-0">
+            <div className="relative w-32 h-20">
+              <div className="absolute left-0 top-0 w-16 h-20 bg-red-600 transform -skew-y-6 origin-top-right"></div>
+              <div className="absolute right-0 top-0 w-16 h-20 bg-red-400 transform skew-y-6 origin-top-left"></div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700/50">
+            <div className="pt-8 pb-4 px-8 text-center border-b border-gray-700/50">
+              <h1 className="text-2xl font-bold text-white mb-2">Account Setup Error</h1>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Your retailer account is not properly configured.
+              </p>
+            </div>
+            
+            <div className="px-8 py-6 space-y-3">
+              <div className="bg-black/40 border border-gray-700/50 rounded-lg p-4">
+                <p className="text-xs text-gray-400 mb-2">Contact support for assistance</p>
+                <a href="mailto:support@unlimitedperfectdeals.com" className="text-teal-400 hover:text-teal-300 font-medium text-sm">
+                  support@unlimitedperfectdeals.com
+                </a>
+              </div>
+            </div>
+
+            <div className="bg-black/40 px-8 py-5 border-t border-gray-700/50">  
+              <a
+                href="/"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 text-black font-semibold rounded-lg transition-all shadow-lg text-sm"
+              >
+                Go to Homepage
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If approved, redirect to landing page
   if (profile.retailer_id) {
     const { data: retailer } = await supabase
       .from('retailers')
@@ -44,201 +88,164 @@ export default async function PendingPage() {
       .single();
 
     if (retailer?.status === 'approved') {
-      redirect('/retailer/dashboard');
+      redirect('/');
     }
   }
 
   // Get full retailer details
-  const { data: retailer } = await supabase
+  const { data: retailer, error: retailerError } = await supabase
     .from('retailers')
     .select('*')
     .eq('id', profile.retailer_id)
     .single();
 
+  // If retailer record not found or error fetching it
+  if (retailerError || !retailer) {
+    console.error('Retailer fetch error:', retailerError);
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="max-w-lg w-full">
+          {/* 3D Ribbon */}
+          <div className="flex justify-center mb-0">
+            <div className="relative w-32 h-20">
+              <div className="absolute left-0 top-0 w-16 h-20 bg-red-600 transform -skew-y-6 origin-top-right"></div>
+              <div className="absolute right-0 top-0 w-16 h-20 bg-red-400 transform skew-y-6 origin-top-left"></div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700/50">
+            <div className="pt-8 pb-4 px-8 text-center border-b border-gray-700/50">
+              <h1 className="text-2xl font-bold text-white mb-2">Account Not Found</h1>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                We couldn't find your retailer account information.
+              </p>
+            </div>
+            
+            <div className="px-8 py-6 space-y-3">
+              <div className="bg-black/40 border border-gray-700/50 rounded-lg p-4">
+                <p className="text-xs text-gray-500 font-mono mb-2">
+                  <span className="font-semibold text-gray-400">Error:</span> {retailerError?.message || 'Record not found'}
+                </p>
+              </div>
+              
+              <div className="bg-black/40 border border-gray-700/50 rounded-lg p-4 text-center">
+                <p className="text-xs text-gray-400 mb-2">Contact support for assistance</p>
+                <a href="mailto:support@unlimitedperfectdeals.com" className="text-teal-400 hover:text-teal-300 font-medium text-sm">
+                  support@unlimitedperfectdeals.com
+                </a>
+              </div>
+            </div>
+
+            <div className="bg-black/40 px-8 py-5 border-t border-gray-700/50">
+              <a
+                href="/"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 text-black font-semibold rounded-lg transition-all shadow-lg text-sm"
+              >
+                Go to Homepage
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // If rejected, show rejection message
   const isRejected = retailer?.status === 'rejected';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
       {/* Auto-refresh component - checks status every 30 seconds */}
       <AutoRefresh checkInterval={30000} />
       
-      <div className="max-w-2xl w-full">
-        {/* Status Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div className="max-w-lg w-full">
+        {/* 3D Ribbon at top */}
+        <div className="flex justify-center mb-0">
+          <div className="relative w-32 h-20">
+            {/* Left fold - darker */}
+            <div className={`absolute left-0 top-0 w-16 h-20 ${isRejected ? 'bg-red-600' : 'bg-teal-600'} transform -skew-y-6 origin-top-right`}></div>
+            {/* Right fold - lighter */}
+            <div className={`absolute right-0 top-0 w-16 h-20 ${isRejected ? 'bg-red-400' : 'bg-teal-400'} transform skew-y-6 origin-top-left`}></div>
+          </div>
+        </div>
+
+        {/* Card hanging from ribbon */}
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700/50">
           {/* Header */}
-          <div className={`p-8 text-center ${isRejected ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-blue-500 to-indigo-600'}`}>
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-4 backdrop-blur-sm">
-              {isRejected ? (
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              )}
-            </div>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              {isRejected ? 'Application Declined' : 'Application Under Review'}
+          <div className="pt-8 pb-4 px-8 text-center border-b border-gray-700/50">
+            <h1 className="text-2xl font-bold text-white mb-2">
+              {isRejected ? 'Application Declined' : 'Retailer Application'}
             </h1>
-            <p className="text-white/90 text-lg">
-              {isRejected ? 'Your retailer application has been reviewed' : 'Your account is being verified by our team'}
+            <p className="text-gray-400 text-sm leading-relaxed">
+              {isRejected 
+                ? 'Your application has been reviewed and declined' 
+                : 'Your application is currently under review. We\'ll notify you once approved.'}
             </p>
           </div>
 
           {/* Content */}
-          <div className="p-8 space-y-6">
+          <div className="px-8 py-6 space-y-3">
             {isRejected ? (
               <>
                 {/* Rejection Info */}
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <h2 className="text-lg font-semibold text-red-900 mb-2">Application Status: Rejected</h2>
+                <div className="bg-black/40 border border-red-500/20 rounded-lg p-4">
                   {retailer?.rejection_reason && (
-                    <div className="mt-4">
-                      <p className="text-sm font-medium text-red-800 mb-1">Reason:</p>
-                      <p className="text-sm text-red-700">{retailer.rejection_reason}</p>
+                    <div>
+                      <p className="text-xs font-medium text-gray-400 mb-1">Reason</p>
+                      <p className="text-sm text-gray-300">{retailer.rejection_reason}</p>
                     </div>
+                  )}
+                  {!retailer?.rejection_reason && (
+                    <p className="text-sm text-gray-300">Your application did not meet our requirements.</p>
                   )}
                 </div>
 
-                {/* Next Steps */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900">What you can do:</h3>
-                  <ul className="space-y-3">
-                    <li className="flex items-start">
-                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-gray-700">Contact our support team at <a href="mailto:support@unlimitedperfectdeals.com" className="text-blue-600 hover:underline">support@unlimitedperfectdeals.com</a> for more information</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-gray-700">Review the reason above and consider reapplying with updated information</span>
-                    </li>
-                  </ul>
+                <div className="bg-black/40 rounded-lg p-3 text-center">
+                  <p className="text-xs text-gray-400 mb-1">Contact support for assistance</p>
+                  <a href="mailto:support@unlimitedperfectdeals.com" className="text-teal-400 hover:text-teal-300 text-sm font-medium">
+                    support@unlimitedperfectdeals.com
+                  </a>
                 </div>
               </>
             ) : (
               <>
-                {/* Account Info */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900">Application Details</h2>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                      <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                      </svg>
-                      Pending Review
-                    </span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-black/40 rounded-lg px-4 py-3 border border-gray-700/50">
+                    <label className="text-xs text-gray-500 block mb-1">Business Name</label>
+                    <p className="text-sm text-white font-medium truncate">{retailer?.name || 'N/A'}</p>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center py-2 border-b border-blue-200">
-                      <span className="text-sm text-gray-600">Business Name</span>
-                      <span className="text-sm font-medium text-gray-900">{retailer?.name || 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-blue-200">
-                      <span className="text-sm text-gray-600">Email Address</span>
-                      <span className="text-sm font-medium text-gray-900">{user.email}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-sm text-gray-600">Submitted On</span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {retailer?.created_at ? new Date(retailer.created_at).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        }) : 'N/A'}
-                      </span>
+                  
+                  <div className="bg-black/40 rounded-lg px-4 py-3 border border-gray-700/50">
+                    <label className="text-xs text-gray-500 block mb-1">Status</label>
+                    <div className="inline-flex items-center gap-2">
+                      <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
+                      <p className="text-sm text-teal-400 font-medium">Under Review</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Timeline */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900">What happens next?</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 shrink-0">
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-900">Application Submitted</p>
-                        <p className="text-xs text-gray-500 mt-1">Your application has been received successfully</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 shrink-0 animate-pulse">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-900">Under Review</p>
-                        <p className="text-xs text-gray-500 mt-1">Our team is currently reviewing your information</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-400 shrink-0">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-900">Decision & Notification</p>
-                        <p className="text-xs text-gray-500 mt-1">You'll receive an email once your application is approved</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-400 shrink-0">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                        </svg>
-                      </div>
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-900">Access Dashboard</p>
-                        <p className="text-xs text-gray-500 mt-1">Start creating deals and managing your retailer account</p>
-                      </div>
-                    </div>
-                  </div>
+                <div className="bg-black/40 rounded-lg px-4 py-3 border border-gray-700/50">
+                  <label className="text-xs text-gray-500 block mb-1">Email Address</label>
+                  <p className="text-sm text-white font-medium truncate">{user.email}</p>
+                </div>
+                
+                <div className="bg-black/40 rounded-lg px-4 py-3 border border-gray-700/50">
+                  <label className="text-xs text-gray-500 block mb-1">Submitted On</label>
+                  <p className="text-sm text-white font-medium">
+                    {retailer?.created_at ? new Date(retailer.created_at).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    }) : 'N/A'}
+                  </p>
                 </div>
 
-                {/* Estimated Time */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Typical Review Time</p>
-                      <p className="text-xs text-gray-600 mt-1">Most applications are reviewed within 24-48 hours</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Help Section */}
-                <div className="border-t border-gray-200 pt-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">Need Help?</h3>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">
-                      If you have questions about your application, please contact us:
-                    </p>
-                    <div className="flex items-center text-sm">
-                      <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      <a href="mailto:support@unlimitedperfectdeals.com" className="text-blue-600 hover:underline">
-                        support@unlimitedperfectdeals.com
-                      </a>
-                    </div>
-                  </div>
+                {/* Footer Note */}
+                <div className="bg-black/40 rounded-lg p-3 text-center border-t border-gray-700/50 mt-2">
+                  <p className="text-xs text-gray-500 mb-1">For inquiries, contact us at</p>
+                  <a href="mailto:support@unlimitedperfectdeals.com" className="text-teal-400 hover:text-teal-300 text-sm font-medium">
+                    support@unlimitedperfectdeals.com
+                  </a>
                 </div>
               </>
             )}
@@ -247,11 +254,6 @@ export default async function PendingPage() {
           {/* Actions */}
           <PendingActions isRejected={isRejected} />
         </div>
-
-        {/* Footer Note */}
-        <p className="text-center text-sm text-gray-500 mt-6">
-          This page will automatically redirect once your application is approved
-        </p>
       </div>
     </div>
   );

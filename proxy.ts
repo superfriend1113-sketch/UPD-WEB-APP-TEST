@@ -81,8 +81,8 @@ export async function proxy(request: NextRequest) {
   // Refresh session - IMPORTANT: must call getUser() to refresh the cookie
   const { data: { user } } = await supabase.auth.getUser();
 
-  // If logged-in user visits homepage or auth pages, redirect retailers to their portal
-  if (user && (pathname === '/' || pathname.startsWith('/auth'))) {
+  // If logged-in user visits auth pages, redirect them away
+  if (user && pathname.startsWith('/auth')) {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('role, retailer_id')
@@ -90,7 +90,7 @@ export async function proxy(request: NextRequest) {
       .single();
 
     if (profile?.role === 'retailer') {
-      // Check approval status
+      // Redirect retailers away from auth pages to their portal
       if (profile.retailer_id) {
         const { data: retailer } = await supabase
           .from('retailers')
@@ -106,7 +106,7 @@ export async function proxy(request: NextRequest) {
     }
 
     // Redirect consumers away from auth pages if already logged in
-    if (pathname.startsWith('/auth') && profile?.role === 'consumer') {
+    if (profile?.role === 'consumer') {
       return NextResponse.redirect(new URL('/', request.url));
     }
   }

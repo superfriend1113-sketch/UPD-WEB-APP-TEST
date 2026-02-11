@@ -4,13 +4,33 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/lib/supabase/config';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [dealsMenuOpen, setDealsMenuOpen] = useState(false);
   const [aboutMenuOpen, setAboutMenuOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const { user, loading, signOut } = useAuth();
+
+  // Fetch user role when user is authenticated
+  useEffect(() => {
+    if (user) {
+      const fetchUserRole = async () => {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        setUserRole(profile?.role || null);
+      };
+      fetchUserRole();
+    } else {
+      setUserRole(null);
+    }
+  }, [user]);
 
   return (
     <header className="sticky top-0 z-50 bg-gradient-to-r from-teal-50 to-orange-50 border-b border-gray-200">
@@ -128,13 +148,21 @@ export default function Header() {
             >
               Contact Us
             </Link>
+
           </div>
 
           {/* Auth Buttons / User Menu */}
           <div className="hidden lg:flex items-center gap-3">
             {!loading && (
               <>
-                {user ? (
+                {user && userRole === 'retailer' ? (
+                  <Link
+                    href="/retailer/dashboard"
+                    className="flex items-center gap-2 px-5 py-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-colors font-medium text-sm"
+                  >
+                    Retailer Dashboard
+                  </Link>
+                ) : user ? (
                   <div className="relative">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -301,7 +329,17 @@ export default function Header() {
               {/* Mobile Auth Buttons / User Menu */}
               {!loading && (
                 <>
-                  {user ? (
+                  {user && userRole === 'retailer' ? (
+                    <div className="pt-3 mt-3 border-t border-gray-200 flex flex-col gap-3">
+                      <Link
+                        href="/retailer/dashboard"
+                        className="text-center px-5 py-2 bg-teal-600 text-white text-sm font-medium rounded-full hover:bg-teal-700 transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Retailer Dashboard
+                      </Link>
+                    </div>
+                  ) : user ? (
                     <>
                       <div className="pt-3 mt-3 border-t border-gray-200">
                         <p className="text-xs font-medium text-gray-500 mb-2">

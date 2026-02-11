@@ -45,22 +45,9 @@ export default function SignUpForm() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && user) {
-      const checkRole = async () => {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('role, retailer_id')
-          .eq('id', user.id)
-          .single();
-
-        if (profile?.role === 'retailer') {
-          window.location.href = '/retailer/dashboard';
-        } else {
-          window.location.href = '/';
-        }
-      };
-      checkRole();
+      window.location.href = '/';
     }
-  }, [user, authLoading, router, supabase]);
+  }, [user, authLoading]);
 
   const handleGoogleSignUp = async () => {
     try {
@@ -214,8 +201,8 @@ export default function SignUpForm() {
       // Wait briefly for database operations to complete, then redirect
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Redirect to retailer pending page (full page load to get retailer layout)
-      window.location.href = '/retailer/pending';
+      // Redirect to home page
+      window.location.href = '/';
     } catch (err) {
       console.error('Registration error:', err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');

@@ -19,27 +19,8 @@ export default async function SignUpPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
-  // Redirect authenticated users based on their role
+  // Redirect authenticated users to home page
   if (user) {
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role, retailer_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role === 'retailer') {
-      if (profile.retailer_id) {
-        const { data: retailer } = await supabase
-          .from('retailers')
-          .select('status')
-          .eq('id', profile.retailer_id)
-          .single();
-        if (retailer?.status === 'approved') {
-          redirect('/retailer/dashboard');
-        }
-      }
-      redirect('/retailer/pending');
-    }
     redirect('/');
   }
 
