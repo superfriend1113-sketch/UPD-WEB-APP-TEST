@@ -9,7 +9,7 @@ export default function OurStoryPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-teal-600 to-orange-600 text-white py-20">
+      {/* <div className="bg-gradient-to-r from-teal-600 to-orange-600 text-white py-20">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center">
             <div className="inline-block px-6 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full mb-6">
@@ -23,7 +23,7 @@ export default function OurStoryPage() {
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* The Problem Section */}
       <div className="container mx-auto px-4 py-20 max-w-6xl">
