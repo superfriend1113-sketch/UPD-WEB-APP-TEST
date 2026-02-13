@@ -143,11 +143,21 @@ export default function Header() {
             </div>
             
             <Link 
-              href="/partner" 
+              href="/contact-us" 
               className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors"
             >
               Contact Us
             </Link>
+
+            {/* Retailer Dashboard Link - Only show for retailers */}
+            {user && userRole === 'retailer' && (
+              <Link 
+                href="/retailer/dashboard" 
+                className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors"
+              >
+                Retailer Dashboard
+              </Link>
+            )}
 
           </div>
 
@@ -155,25 +165,13 @@ export default function Header() {
           <div className="hidden lg:flex items-center gap-3">
             {!loading && (
               <>
-                {user && userRole === 'retailer' ? (
-                  <Link
-                    href="/retailer/dashboard"
-                    className="flex items-center gap-2 px-5 py-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-colors font-medium text-sm"
-                  >
-                    Retailer Dashboard
-                  </Link>
-                ) : user ? (
+                {user ? (
                   <div className="relative">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-colors font-medium text-sm"
+                      className="w-10 h-10 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-colors font-bold text-sm flex items-center justify-center"
                     >
-                      <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                        <span className="text-teal-600 text-xs font-bold">
-                          {user.email?.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <span>{user.user_metadata?.full_name?.split(' ')[0] || 'Account'}</span>
+                      {user.email?.charAt(0).toUpperCase()}
                     </button>
 
                     {/* User Dropdown Menu */}
@@ -185,36 +183,59 @@ export default function Header() {
                           </p>
                           <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>
-                        <Link
-                          href="/watchlist"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          My Watchlist
-                        </Link>
-                        <Link
-                          href="/alerts"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          Price Alerts
-                        </Link>
-                        <Link
-                          href="/profile"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          Profile Settings
-                        </Link>
-                        <button
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            signOut();
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
-                        >
-                          Sign Out
-                        </button>
+                        {userRole === 'retailer' ? (
+                          <>
+                            <Link
+                              href="/retailer/profile"
+                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                              onClick={() => setUserMenuOpen(false)}
+                            >
+                              Profile Settings
+                            </Link>
+                            <button
+                              onClick={() => {
+                                setUserMenuOpen(false);
+                                signOut();
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                            >
+                              Sign Out
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <Link
+                              href="/watchlist"
+                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                              onClick={() => setUserMenuOpen(false)}
+                            >
+                              My Watchlist
+                            </Link>
+                            <Link
+                              href="/alerts"
+                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                              onClick={() => setUserMenuOpen(false)}
+                            >
+                              Price Alerts
+                            </Link>
+                            <Link
+                              href="/profile"
+                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                              onClick={() => setUserMenuOpen(false)}
+                            >
+                              Profile Settings
+                            </Link>
+                            <button
+                              onClick={() => {
+                                setUserMenuOpen(false);
+                                signOut();
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                            >
+                              Sign Out
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -319,7 +340,7 @@ export default function Header() {
               </div>
               
               <Link
-                href="/partner"
+                href="/contact-us"
                 className="text-sm text-gray-700 hover:text-teal-900 font-medium pt-3"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -329,44 +350,55 @@ export default function Header() {
               {/* Mobile Auth Buttons / User Menu */}
               {!loading && (
                 <>
-                  {user && userRole === 'retailer' ? (
-                    <div className="pt-3 mt-3 border-t border-gray-200 flex flex-col gap-3">
-                      <Link
-                        href="/retailer/dashboard"
-                        className="text-center px-5 py-2 bg-teal-600 text-white text-sm font-medium rounded-full hover:bg-teal-700 transition-colors"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Retailer Dashboard
-                      </Link>
-                    </div>
-                  ) : user ? (
+                  {user ? (
                     <>
                       <div className="pt-3 mt-3 border-t border-gray-200">
                         <p className="text-xs font-medium text-gray-500 mb-2">
                           {user.email}
                         </p>
                       </div>
-                      <Link
-                        href="/watchlist"
-                        className="text-sm text-gray-700 hover:text-teal-900 font-medium"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        My Watchlist
-                      </Link>
-                      <Link
-                        href="/alerts"
-                        className="text-sm text-gray-700 hover:text-teal-900 font-medium"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Price Alerts
-                      </Link>
-                      <Link
-                        href="/profile"
-                        className="text-sm text-gray-700 hover:text-teal-900 font-medium"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Profile Settings
-                      </Link>
+                      {userRole === 'retailer' ? (
+                        <>
+                          <Link
+                            href="/retailer/dashboard"
+                            className="text-sm text-gray-700 hover:text-teal-900 font-medium"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            Retailer Dashboard
+                          </Link>
+                          <Link
+                            href="/retailer/profile"
+                            className="text-sm text-gray-700 hover:text-teal-900 font-medium"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            Profile Settings
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            href="/watchlist"
+                            className="text-sm text-gray-700 hover:text-teal-900 font-medium"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            My Watchlist
+                          </Link>
+                          <Link
+                            href="/alerts"
+                            className="text-sm text-gray-700 hover:text-teal-900 font-medium"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            Price Alerts
+                          </Link>
+                          <Link
+                            href="/profile"
+                            className="text-sm text-gray-700 hover:text-teal-900 font-medium"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            Profile Settings
+                          </Link>
+                        </>
+                      )}
                       <button
                         onClick={() => {
                           setMobileMenuOpen(false);

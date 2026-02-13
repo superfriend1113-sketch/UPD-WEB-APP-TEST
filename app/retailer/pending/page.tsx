@@ -1,21 +1,8 @@
-/**
- * Pending Approval Page
- * Shown to retailers waiting for admin approval
- */
-
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import AutoRefresh from './AutoRefresh';
-import PendingActions from './PendingActions';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
 
-export const dynamic = 'force-dynamic';
-
-export const metadata = {
-  title: 'Pending Approval | Retailer Portal',
-  description: 'Your account is pending approval',
-};
-
-export default async function PendingPage() {
+export default async function RetailerPendingPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -23,236 +10,124 @@ export default async function PendingPage() {
     redirect('/auth/login');
   }
 
-  // Get user profile
+  // Fetch user profile
   const { data: profile } = await supabase
     .from('user_profiles')
     .select('role, retailer_id')
     .eq('id', user.id)
     .single();
 
-  // If no profile or not a retailer, redirect to login
-  if (!profile || profile.role !== 'retailer') {
-    redirect('/auth/login?error=unauthorized');
+  // Check if user is a retailer
+  if (profile?.role !== 'retailer' || !profile?.retailer_id) {
+    redirect('/');
   }
 
-  // If no retailer_id linked, show error state
-  if (!profile.retailer_id) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="max-w-lg w-full">
-          {/* 3D Ribbon */}
-          <div className="flex justify-center mb-0">
-            <div className="relative w-32 h-20">
-              <div className="absolute left-0 top-0 w-16 h-20 bg-red-600 transform -skew-y-6 origin-top-right"></div>
-              <div className="absolute right-0 top-0 w-16 h-20 bg-red-400 transform skew-y-6 origin-top-left"></div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700/50">
-            <div className="pt-8 pb-4 px-8 text-center border-b border-gray-700/50">
-              <h1 className="text-2xl font-bold text-white mb-2">Account Setup Error</h1>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                Your retailer account is not properly configured.
-              </p>
-            </div>
-            
-            <div className="px-8 py-6 space-y-3">
-              <div className="bg-black/40 border border-gray-700/50 rounded-lg p-4">
-                <p className="text-xs text-gray-400 mb-2">Contact support for assistance</p>
-                <a href="mailto:support@unlimitedperfectdeals.com" className="text-teal-400 hover:text-teal-300 font-medium text-sm">
-                  support@unlimitedperfectdeals.com
-                </a>
-              </div>
-            </div>
-
-            <div className="bg-black/40 px-8 py-5 border-t border-gray-700/50">  
-              <a
-                href="/"
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 text-black font-semibold rounded-lg transition-all shadow-lg text-sm"
-              >
-                Go to Homepage
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // If approved, redirect to landing page
-  if (profile.retailer_id) {
-    const { data: retailer } = await supabase
-      .from('retailers')
-      .select('status')
-      .eq('id', profile.retailer_id)
-      .single();
-
-    if (retailer?.status === 'approved') {
-      redirect('/');
-    }
-  }
-
-  // Get full retailer details
-  const { data: retailer, error: retailerError } = await supabase
+  // Fetch actual retailer status from retailers table
+  const { data: retailer } = await supabase
     .from('retailers')
-    .select('*')
+    .select('status')
     .eq('id', profile.retailer_id)
     .single();
 
-  // If retailer record not found or error fetching it
-  if (retailerError || !retailer) {
-    console.error('Retailer fetch error:', retailerError);
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="max-w-lg w-full">
-          {/* 3D Ribbon */}
-          <div className="flex justify-center mb-0">
-            <div className="relative w-32 h-20">
-              <div className="absolute left-0 top-0 w-16 h-20 bg-red-600 transform -skew-y-6 origin-top-right"></div>
-              <div className="absolute right-0 top-0 w-16 h-20 bg-red-400 transform skew-y-6 origin-top-left"></div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700/50">
-            <div className="pt-8 pb-4 px-8 text-center border-b border-gray-700/50">
-              <h1 className="text-2xl font-bold text-white mb-2">Account Not Found</h1>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                We couldn't find your retailer account information.
-              </p>
-            </div>
-            
-            <div className="px-8 py-6 space-y-3">
-              <div className="bg-black/40 border border-gray-700/50 rounded-lg p-4">
-                <p className="text-xs text-gray-500 font-mono mb-2">
-                  <span className="font-semibold text-gray-400">Error:</span> {retailerError?.message || 'Record not found'}
-                </p>
-              </div>
-              
-              <div className="bg-black/40 border border-gray-700/50 rounded-lg p-4 text-center">
-                <p className="text-xs text-gray-400 mb-2">Contact support for assistance</p>
-                <a href="mailto:support@unlimitedperfectdeals.com" className="text-teal-400 hover:text-teal-300 font-medium text-sm">
-                  support@unlimitedperfectdeals.com
-                </a>
-              </div>
-            </div>
-
-            <div className="bg-black/40 px-8 py-5 border-t border-gray-700/50">
-              <a
-                href="/"
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 text-black font-semibold rounded-lg transition-all shadow-lg text-sm"
-              >
-                Go to Homepage
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  // Redirect based on actual retailer status
+  if (!retailer || retailer.status !== 'pending') {
+    // If approved, go to dashboard
+    if (retailer?.status === 'approved') {
+      redirect('/retailer/dashboard');
+    }
+    // If rejected, go to rejected page
+    if (retailer?.status === 'rejected') {
+      redirect('/retailer/rejected');
+    }
+    // If no retailer found or unknown status, go home
+    redirect('/');
   }
 
-  // If rejected, show rejection message
-  const isRejected = retailer?.status === 'rejected';
-
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      {/* Auto-refresh component - checks status every 30 seconds */}
-      <AutoRefresh checkInterval={30000} />
-      
-      <div className="max-w-lg w-full">
-        {/* 3D Ribbon at top */}
-        <div className="flex justify-center mb-0">
-          <div className="relative w-32 h-20">
-            {/* Left fold - darker */}
-            <div className={`absolute left-0 top-0 w-16 h-20 ${isRejected ? 'bg-red-600' : 'bg-teal-600'} transform -skew-y-6 origin-top-right`}></div>
-            {/* Right fold - lighter */}
-            <div className={`absolute right-0 top-0 w-16 h-20 ${isRejected ? 'bg-red-400' : 'bg-teal-400'} transform skew-y-6 origin-top-left`}></div>
-          </div>
-        </div>
-
-        {/* Card hanging from ribbon */}
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700/50">
-          {/* Header */}
-          <div className="pt-8 pb-4 px-8 text-center border-b border-gray-700/50">
-            <h1 className="text-2xl font-bold text-white mb-2">
-              {isRejected ? 'Application Declined' : 'Retailer Application'}
-            </h1>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              {isRejected 
-                ? 'Your application has been reviewed and declined' 
-                : 'Your application is currently under review. We\'ll notify you once approved.'}
-            </p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl w-full">
+        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+          {/* Icon */}
+          <div className="flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mx-auto mb-6">
+            <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </div>
 
-          {/* Content */}
-          <div className="px-8 py-6 space-y-3">
-            {isRejected ? (
-              <>
-                {/* Rejection Info */}
-                <div className="bg-black/40 border border-red-500/20 rounded-lg p-4">
-                  {retailer?.rejection_reason && (
-                    <div>
-                      <p className="text-xs font-medium text-gray-400 mb-1">Reason</p>
-                      <p className="text-sm text-gray-300">{retailer.rejection_reason}</p>
-                    </div>
-                  )}
-                  {!retailer?.rejection_reason && (
-                    <p className="text-sm text-gray-300">Your application did not meet our requirements.</p>
-                  )}
-                </div>
+          {/* Title */}
+          <h1 className="text-3xl font-bold text-gray-900 text-center mb-4">
+            Application Under Review
+          </h1>
 
-                <div className="bg-black/40 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-400 mb-1">Contact support for assistance</p>
-                  <a href="mailto:support@unlimitedperfectdeals.com" className="text-teal-400 hover:text-teal-300 text-sm font-medium">
-                    support@unlimitedperfectdeals.com
-                  </a>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-black/40 rounded-lg px-4 py-3 border border-gray-700/50">
-                    <label className="text-xs text-gray-500 block mb-1">Business Name</label>
-                    <p className="text-sm text-white font-medium truncate">{retailer?.name || 'N/A'}</p>
-                  </div>
-                  
-                  <div className="bg-black/40 rounded-lg px-4 py-3 border border-gray-700/50">
-                    <label className="text-xs text-gray-500 block mb-1">Status</label>
-                    <div className="inline-flex items-center gap-2">
-                      <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
-                      <p className="text-sm text-teal-400 font-medium">Under Review</p>
-                    </div>
-                  </div>
-                </div>
+          {/* Message */}
+          <p className="text-gray-600 text-center mb-8">
+            Thank you for applying to become a retailer on Unlimited Perfect Deals. Your application is currently being reviewed by our team.
+          </p>
 
-                <div className="bg-black/40 rounded-lg px-4 py-3 border border-gray-700/50">
-                  <label className="text-xs text-gray-500 block mb-1">Email Address</label>
-                  <p className="text-sm text-white font-medium truncate">{user.email}</p>
-                </div>
-                
-                <div className="bg-black/40 rounded-lg px-4 py-3 border border-gray-700/50">
-                  <label className="text-xs text-gray-500 block mb-1">Submitted On</label>
-                  <p className="text-sm text-white font-medium">
-                    {retailer?.created_at ? new Date(retailer.created_at).toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'short', 
-                      day: 'numeric' 
-                    }) : 'N/A'}
-                  </p>
-                </div>
+          {/* Status Info */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-8">
+            <h2 className="font-semibold text-amber-900 mb-3">
+              What happens next?
+            </h2>
+            <ul className="space-y-2 text-amber-800 text-sm">
+              <li className="flex items-start gap-2">
+                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Our team will review your application within 2-3 business days</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>You'll receive an email notification once a decision is made</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>If approved, you'll gain immediate access to the retailer dashboard</span>
+              </li>
+            </ul>
+          </div>
 
-                {/* Footer Note */}
-                <div className="bg-black/40 rounded-lg p-3 text-center border-t border-gray-700/50 mt-2">
-                  <p className="text-xs text-gray-500 mb-1">For inquiries, contact us at</p>
-                  <a href="mailto:support@unlimitedperfectdeals.com" className="text-teal-400 hover:text-teal-300 text-sm font-medium">
-                    support@unlimitedperfectdeals.com
-                  </a>
-                </div>
-              </>
-            )}
+          {/* Consumer Access Notice */}
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-6 mb-8">
+            <div className="flex items-start gap-3">
+              <svg className="w-6 h-6 text-teal-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h3 className="font-semibold text-teal-900 mb-1">
+                  Shop While You Wait
+                </h3>
+                <p className="text-teal-800 text-sm">
+                  While your application is being reviewed, you can browse deals, add items to your cart, and make purchases as a consumer.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Actions */}
-          <PendingActions isRejected={isRejected} />
+          <div className="space-y-3">
+            <Link
+              href="/"
+              className="block w-full px-6 py-3 bg-teal-600 text-white text-center font-semibold rounded-lg hover:bg-teal-700 transition-colors"
+            >
+              Browse Deals
+            </Link>
+            <Link
+              href="/contact-us"
+              className="block w-full px-6 py-3 border-2 border-gray-300 text-gray-700 text-center font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Contact Support
+            </Link>
+          </div>
+
+          {/* Additional Info */}
+          <p className="text-sm text-gray-500 text-center mt-6">
+            Have questions about your application? Feel free to reach out to our support team.
+          </p>
         </div>
       </div>
     </div>

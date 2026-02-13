@@ -14,6 +14,7 @@ import { formatPrice } from '@/types/deal';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { addToWatchlist, removeFromWatchlist, isInWatchlist } from '@/lib/actions/watchlist';
 import DealBadges from './DealBadges';
+import ProtectedAction from '@/components/auth/ProtectedAction';
 
 interface DealCardProps {
   deal: Deal;
@@ -45,12 +46,7 @@ export default function DealCard({ deal, initialInWatchlist = false, onWatchlist
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
-    
-    // Redirect to login if not authenticated
-    if (!user) {
-      router.push('/auth/login?redirect=' + encodeURIComponent(window.location.pathname));
-      return;
-    }
+    e.stopPropagation();
 
     setIsLoading(true);
     
@@ -87,27 +83,29 @@ export default function DealCard({ deal, initialInWatchlist = false, onWatchlist
           />
           
           {/* Wishlist Button */}
-          <button
-            onClick={handleWishlistClick}
-            disabled={isLoading}
-            className="absolute top-3 right-3 w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label={isWishlisted ? 'Remove from watchlist' : 'Add to watchlist'}
-          >
-            <svg
-              className={`w-5 h-5 transition-colors ${
-                isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none text-gray-900'
-              }`}
-              stroke="currentColor"
-              strokeWidth="1.5"
-              viewBox="0 0 24 24"
+          <ProtectedAction action="watchlist">
+            <button
+              onClick={handleWishlistClick}
+              disabled={isLoading}
+              className="absolute top-3 right-3 w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={isWishlisted ? 'Remove from watchlist' : 'Add to watchlist'}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              />
-            </svg>
-          </button>
+              <svg
+                className={`w-5 h-5 transition-colors ${
+                  isWishlisted ? 'fill-red-500 text-red-500' : 'fill-none text-gray-900'
+                }`}
+                stroke="currentColor"
+                strokeWidth="1.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+              </svg>
+            </button>
+          </ProtectedAction>
 
           {/* Discount Badge */}
           {deal.savingsPercentage > 0 && (

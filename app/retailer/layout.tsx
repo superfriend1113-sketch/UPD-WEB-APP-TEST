@@ -1,6 +1,6 @@
 /**
  * Retailer Portal Layout
- * Protected layout for all retailer routes
+ * Protected layout for all retailer routes with status-based access control
  * Auth-only wrapper - sidebar is in dashboard/layout.tsx
  */
 
@@ -28,10 +28,10 @@ export default async function RetailerLayout({
     redirect('/auth/login');
   }
 
-  // Get user profile
+  // Get user profile with retailer status
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, retailer_id')
+    .select('role, retailer_id, retailer_status')
     .eq('id', user.id)
     .single();
 

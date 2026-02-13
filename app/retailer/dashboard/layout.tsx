@@ -1,7 +1,7 @@
 /**
  * Dashboard Layout
  * Protected layout for approved retailer dashboard
- * Includes sidebar navigation matching retailer-management design
+ * Includes sidebar navigation and retailer status-based access control
  */
 
 import { redirect } from 'next/navigation';
@@ -21,35 +21,40 @@ export default async function DashboardLayout({
     redirect('/auth/login');
   }
 
-  // Get user profile and retailer status
+  // Get user profile with retailer_id
   const { data: profile } = await supabase
     .from('user_profiles')
     .select('role, retailer_id')
     .eq('id', user.id)
     .single();
 
-  // Double-check user is a retailer (should already be checked by parent layout)
-  if (!profile || profile.role !== 'retailer') {
+  // Double-check user is a retailer
+  if (!profile || profile.role !== 'retailer' || !profile.retailer_id) {
     redirect('/auth/login?error=unauthorized');
   }
 
-  // Check retailer approval status
-  if (profile.retailer_id) {
-    const { data: retailer } = await supabase
-      .from('retailers')
-      .select('status')
-      .eq('id', profile.retailer_id)
-      .single();
+  // Fetch actual retailer status from retailers table (source of truth)
+  const { data: retailer } = await supabase
+    .from('retailers')
+    .select('status')
+    .eq('id', profile.retailer_id)
+    .single();
 
-    // Redirect to pending page if not approved
-    if (retailer?.status !== 'approved') {
-      redirect('/retailer/pending');
-    }
-  } else {
-    // No retailer account linked, redirect to pending
+  // Check retailer status and redirect accordingly
+  if (!retailer) {
+    redirect('/auth/login?error=unauthorized');
+  }
+
+  if (retailer.status === 'rejected') {
+    redirect('/retailer/rejected');
+  } else if (retailer.status === 'pending') {
+    redirect('/retailer/pending');
+  } else if (retailer.status !== 'approved') {
+    // Unknown status, redirect to pending for safety
     redirect('/retailer/pending');
   }
 
+  // Only approved retailers reach this point
   return (
     <div className="min-h-screen bg-gray-50">
       <RetailerSidebar />
