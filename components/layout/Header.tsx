@@ -2,35 +2,15 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { supabase } from '@/lib/supabase/config';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [dealsMenuOpen, setDealsMenuOpen] = useState(false);
   const [aboutMenuOpen, setAboutMenuOpen] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
   const { user, loading, signOut } = useAuth();
-
-  // Fetch user role when user is authenticated
-  useEffect(() => {
-    if (user) {
-      const fetchUserRole = async () => {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        setUserRole(profile?.role || null);
-      };
-      fetchUserRole();
-    } else {
-      setUserRole(null);
-    }
-  }, [user]);
 
   return (
     <header className="sticky top-0 z-50 bg-gradient-to-r from-teal-50 to-orange-50 border-b border-gray-200">
@@ -149,8 +129,8 @@ export default function Header() {
               Contact Us
             </Link>
 
-            {/* Retailer Dashboard Link - Only show for retailers */}
-            {user && userRole === 'retailer' && (
+            {/* Retailer Dashboard Link - Show for all authenticated users */}
+            {user && (
               <Link 
                 href="/retailer/dashboard" 
                 className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors"
@@ -183,59 +163,43 @@ export default function Header() {
                           </p>
                           <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>
-                        {userRole === 'retailer' ? (
-                          <>
-                            <Link
-                              href="/retailer/profile"
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
-                              onClick={() => setUserMenuOpen(false)}
-                            >
-                              Profile Settings
-                            </Link>
-                            <button
-                              onClick={() => {
-                                setUserMenuOpen(false);
-                                signOut();
-                              }}
-                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
-                            >
-                              Sign Out
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <Link
-                              href="/watchlist"
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
-                              onClick={() => setUserMenuOpen(false)}
-                            >
-                              My Watchlist
-                            </Link>
-                            <Link
-                              href="/alerts"
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
-                              onClick={() => setUserMenuOpen(false)}
-                            >
-                              Price Alerts
-                            </Link>
-                            <Link
-                              href="/profile"
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
-                              onClick={() => setUserMenuOpen(false)}
-                            >
-                              Profile Settings
-                            </Link>
-                            <button
-                              onClick={() => {
-                                setUserMenuOpen(false);
-                                signOut();
-                              }}
-                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
-                            >
-                              Sign Out
-                            </button>
-                          </>
-                        )}
+                        <Link
+                          href="/retailer/dashboard"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          Retailer Dashboard
+                        </Link>
+                        <Link
+                          href="/watchlist"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          My Watchlist
+                        </Link>
+                        <Link
+                          href="/alerts"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          Price Alerts
+                        </Link>
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-teal-50"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          Profile Settings
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            signOut();
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                        >
+                          Sign Out
+                        </button>
                       </div>
                     )}
                   </div>
@@ -357,48 +321,34 @@ export default function Header() {
                           {user.email}
                         </p>
                       </div>
-                      {userRole === 'retailer' ? (
-                        <>
-                          <Link
-                            href="/retailer/dashboard"
-                            className="text-sm text-gray-700 hover:text-teal-900 font-medium"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            Retailer Dashboard
-                          </Link>
-                          <Link
-                            href="/retailer/profile"
-                            className="text-sm text-gray-700 hover:text-teal-900 font-medium"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            Profile Settings
-                          </Link>
-                        </>
-                      ) : (
-                        <>
-                          <Link
-                            href="/watchlist"
-                            className="text-sm text-gray-700 hover:text-teal-900 font-medium"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            My Watchlist
-                          </Link>
-                          <Link
-                            href="/alerts"
-                            className="text-sm text-gray-700 hover:text-teal-900 font-medium"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            Price Alerts
-                          </Link>
-                          <Link
-                            href="/profile"
-                            className="text-sm text-gray-700 hover:text-teal-900 font-medium"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            Profile Settings
-                          </Link>
-                        </>
-                      )}
+                      <Link
+                        href="/retailer/dashboard"
+                        className="text-sm text-gray-700 hover:text-teal-900 font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Retailer Dashboard
+                      </Link>
+                      <Link
+                        href="/watchlist"
+                        className="text-sm text-gray-700 hover:text-teal-900 font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        My Watchlist
+                      </Link>
+                      <Link
+                        href="/alerts"
+                        className="text-sm text-gray-700 hover:text-teal-900 font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Price Alerts
+                      </Link>
+                      <Link
+                        href="/profile"
+                        className="text-sm text-gray-700 hover:text-teal-900 font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Profile Settings
+                      </Link>
                       <button
                         onClick={() => {
                           setMobileMenuOpen(false);

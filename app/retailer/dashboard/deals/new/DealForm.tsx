@@ -140,19 +140,170 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
     : 0;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Input
-        label="Deal Title"
-        type="text"
-        name="title"
-        value={formData.title}
-        onChange={handleChange}
-        required
-        placeholder="e.g., 50% Off Premium Headphones"
-      />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* SKU and Title Row */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="flex flex-col gap-[5px]">
+          <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
+            SKU <span className="text-[#c8401a]">*</span>
+          </label>
+          <input
+            type="text"
+            name="sku"
+            placeholder="APX-0055"
+            className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
+          />
+        </div>
+        <div className="col-span-2 flex flex-col gap-[5px]">
+          <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
+            Product Title <span className="text-[#c8401a]">*</span>
+          </label>
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            placeholder="e.g. Sony XB700 Headphones — Overstock"
+            className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
+          />
+        </div>
+      </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      {/* Category, Condition, Quantity Row */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="flex flex-col gap-[5px]">
+          <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
+            Category <span className="text-[#c8401a]">*</span>
+          </label>
+          <select
+            name="category_id"
+            value={formData.category_id}
+            onChange={handleChange}
+            required
+            className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
+          >
+            <option value="">Select...</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-[5px]">
+          <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
+            Condition <span className="text-[#c8401a]">*</span>
+          </label>
+          <select
+            name="condition"
+            className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
+          >
+            <option>Overstock</option>
+            <option>Returned</option>
+            <option>Open-box</option>
+            <option>Seasonal</option>
+            <option>Near-expiration</option>
+          </select>
+        </div>
+        <div className="flex flex-col gap-[5px]">
+          <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
+            Quantity <span className="text-[#c8401a]">*</span>
+          </label>
+          <input
+            type="number"
+            name="quantity"
+            placeholder="e.g. 25"
+            min="1"
+            className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
+          />
+        </div>
+      </div>
+
+      {/* Pricing Row */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="flex flex-col gap-[5px]">
+          <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
+            Original Price ($) <span className="text-[#c8401a]">*</span>
+          </label>
+          <input
+            type="number"
+            name="original_price"
+            value={formData.original_price}
+            onChange={handleChange}
+            required
+            step="0.01"
+            min="0"
+            placeholder="299.00"
+            className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
+          />
+        </div>
+        <div className="flex flex-col gap-[5px]">
+          <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
+            Current Price ($) <span className="text-[#c8401a]">*</span>
+          </label>
+          <input
+            type="number"
+            name="discounted_price"
+            value={formData.discounted_price}
+            onChange={handleChange}
+            required
+            step="0.01"
+            min="0"
+            placeholder="189.00"
+            className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
+          />
+          {discountPercentage > 0 && (
+            <p className="text-[12px] text-[#1e8a52] font-medium mt-1">
+              −{discountPercentage}% discount
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col gap-[5px]">
+          <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
+            Minimum Price ($) <span className="text-[#c8401a]">*</span>
+          </label>
+          <input
+            type="number"
+            name="minimum_price"
+            placeholder="150.00"
+            step="0.01"
+            min="0"
+            className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
+          />
+        </div>
+      </div>
+
+      {/* Storage Location and Dates Row */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="flex flex-col gap-[5px]">
+          <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
+            Storage Location
+          </label>
+          <input
+            type="text"
+            name="location"
+            placeholder="Chicago, IL"
+            className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
+          />
+        </div>
+        <div className="flex flex-col gap-[5px]">
+          <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
+            Expiration Date <span className="text-[#888070] font-normal">(optional)</span>
+          </label>
+          <input
+            type="date"
+            name="end_date"
+            value={formData.end_date}
+            onChange={handleChange}
+            className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
+          />
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="flex flex-col gap-[5px]">
+        <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
           Description
         </label>
         <textarea
@@ -161,148 +312,70 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
           onChange={handleChange}
           required
           rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Describe the deal, what's included, and why it's a great offer..."
+          placeholder="Describe the product condition, what's included, and any relevant details..."
+          className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white resize-vertical"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Input
-            label="Original Price ($)"
-            type="number"
-            name="original_price"
-            value={formData.original_price}
-            onChange={handleChange}
-            required
-            step="0.01"
-            min="0"
-            placeholder="99.99"
-          />
-        </div>
-        <div>
-          <Input
-            label="Discounted Price ($)"
-            type="number"
-            name="discounted_price"
-            value={formData.discounted_price}
-            onChange={handleChange}
-            required
-            step="0.01"
-            min="0"
-            placeholder="49.99"
-          />
-          {discountPercentage > 0 && (
-            <p className="mt-1 text-sm text-green-600 font-medium">
-              {discountPercentage}% off
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Category
+      {/* Product Image */}
+      <div className="flex flex-col gap-[5px]">
+        <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
+          Product Image
         </label>
-        <select
-          name="category_id"
-          value={formData.category_id}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Select a category</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <Input
-        label="Deal URL"
-        type="url"
-        name="deal_url"
-        value={formData.deal_url}
-        onChange={handleChange}
-        required
-        placeholder="https://yourstore.com/products/deal"
-      />
-
-      <Input
-        label="Image URL"
-        type="url"
-        name="image_url"
-        value={formData.image_url}
-        onChange={handleChange}
-        required
-        placeholder="https://yourstore.com/images/product.jpg"
-      />
-
-      {formData.image_url && (
-        <div className="mt-2">
-          <p className="text-sm text-gray-600 mb-2">Image Preview:</p>
-          <img
-            src={formData.image_url}
-            alt="Deal preview"
-            className="w-full max-w-md h-48 object-cover rounded-lg border border-gray-200"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Invalid+Image+URL';
-            }}
-          />
+        <div className="border-2 border-dashed border-[#d6d0c4] rounded-[6px] p-5 text-center cursor-pointer bg-[#ede9df] text-[#888070] text-[13px] transition-all hover:border-[#0d0d0d] hover:text-[#0d0d0d]">
+          <span className="text-[24px] block mb-[6px]">📁</span>
+          Click to upload or drag & drop<br />
+          <span className="text-[12px]">PNG, JPG up to 10MB</span>
         </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="Start Date"
-          type="date"
-          name="start_date"
-          value={formData.start_date}
-          onChange={handleChange}
-          required
-        />
-        <Input
-          label="End Date (Optional)"
-          type="date"
-          name="end_date"
-          value={formData.end_date}
-          onChange={handleChange}
-          min={formData.start_date}
-        />
-      </div>
-
-      <div className="flex items-center">
         <input
-          type="checkbox"
-          name="is_active"
-          checked={formData.is_active}
+          type="url"
+          name="image_url"
+          value={formData.image_url}
           onChange={handleChange}
-          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          placeholder="Or paste image URL"
+          className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white mt-2"
         />
-        <label htmlFor="is_active" className="ml-2 block text-sm text-gray-700">
-          Active (deal can be shown once approved)
-        </label>
+        {formData.image_url && (
+          <div className="mt-2">
+            <img
+              src={formData.image_url}
+              alt="Preview"
+              className="w-full max-w-md h-48 object-cover rounded-[6px] border border-[#d6d0c4]"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Invalid+Image+URL';
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Validation Warning */}
+      <div className="p-[12px_14px] bg-[#fef8e7] border border-[#f0c040] rounded-[6px] text-[13px] text-[#856404]">
+        ⚠️ Validation: Current price ≤ original price, current price ≥ min price, quantity must be positive.
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 text-red-700 text-sm rounded-md">
+        <div className="p-3 bg-[#fef2f0] border border-[#f0b0a0] text-[#c8401a] text-[13px] rounded-[6px]">
           {error}
         </div>
       )}
 
-      <div className="flex items-center gap-4">
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Submitting...' : initialData ? 'Update Deal' : 'Submit Deal'}
-        </Button>
-        <Button
+      {/* Action Buttons */}
+      <div className="flex gap-[10px] justify-end">
+        <button
           type="button"
-          variant="secondary"
           onClick={() => router.back()}
+          className="inline-flex items-center gap-[7px] px-[22px] py-[10px] rounded-[6px] font-body text-[14px] font-semibold cursor-pointer border-[1.5px] border-[#d6d0c4] bg-transparent text-[#0d0d0d] transition-all hover:border-[#0d0d0d] tracking-[0.2px]"
         >
-          Cancel
-        </Button>
+          Save as Draft
+        </button>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="inline-flex items-center gap-[7px] px-[22px] py-[10px] rounded-[6px] font-body text-[14px] font-semibold cursor-pointer border-none bg-[#0d0d0d] text-white transition-all hover:bg-[#2a2a2a] hover:-translate-y-px tracking-[0.2px] disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+        >
+          {isLoading ? 'Publishing...' : initialData ? 'Update Listing' : 'Publish Listing →'}
+        </button>
       </div>
     </form>
   );

@@ -40,19 +40,16 @@ export default async function NewDealPage() {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, retailer_id')
+    .select('retailer_id')
     .eq('id', user.id)
     .single();
 
-  if (!profile?.retailer_id) {
-    redirect('/retailer/pending');
-  }
-
-  // Get retailer info to check status
+  // Layout already handles retailer_id check and status check
+  // Get retailer info
   const { data: retailer } = await supabase
     .from('retailers')
     .select('*')
-    .eq('id', profile.retailer_id)
+    .eq('id', profile?.retailer_id)
     .single();
 
   // If retailer is not approved, redirect to dashboard
@@ -63,32 +60,27 @@ export default async function NewDealPage() {
   const categories = await getCategories();
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Create New Deal</h1>
-        <p className="mt-2 text-gray-600">
-          Submit a new deal for admin approval
+    <div className="p-8 bg-[#f5f2eb] min-h-screen">
+      {/* Admin Header */}
+      <div className="mb-[28px]">
+        <h1 className="font-display font-extrabold text-[36px] tracking-[0.5px] text-[#0d0d0d] leading-none">
+          Upload Inventory
+        </h1>
+        <p className="text-[#888070] text-[13px] mt-[3px]">
+          Add surplus items to the deal feed. They appear publicly once submitted.
         </p>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-800">Review Process</h3>
-            <p className="mt-1 text-sm text-blue-700">
-              Your deal will be reviewed by our team before being published. You'll be notified once it's approved or if changes are needed.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow p-6">
-        <DealForm retailerId={profile.retailer_id} categories={categories} />
+      {/* Form Card */}
+      <div className="bg-white rounded-[6px] border border-[#d6d0c4] p-8 shadow-[0_2px_12px_rgba(13,13,13,0.10)] max-w-[860px]">
+        <h2 className="font-display font-extrabold text-[26px] tracking-[0.5px] mb-[4px] text-[#0d0d0d]">
+          New Listing
+        </h2>
+        <p className="text-[#888070] text-[13px] mb-6">
+          All fields required unless marked optional.
+        </p>
+        
+        <DealForm retailerId={profile?.retailer_id || ''} categories={categories} />
       </div>
     </div>
   );

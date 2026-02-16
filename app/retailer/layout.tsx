@@ -1,7 +1,7 @@
 /**
  * Retailer Portal Layout
- * Protected layout for all retailer routes with status-based access control
- * Auth-only wrapper - sidebar is in dashboard/layout.tsx
+ * Protected layout for all retailer routes
+ * Auth-only wrapper - specific access control is in child layouts
  */
 
 import { redirect } from 'next/navigation';
@@ -28,17 +28,7 @@ export default async function RetailerLayout({
     redirect('/auth/login');
   }
 
-  // Get user profile with retailer status
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('role, retailer_id, retailer_status')
-    .eq('id', user.id)
-    .single();
-
-  // Check if user is a retailer
-  if (!profile || profile.role !== 'retailer') {
-    redirect('/auth/login?error=unauthorized');
-  }
-
+  // All authenticated users can access retailer routes
+  // Specific access control (retailer_id, status checks) is handled in child layouts
   return <>{children}</>;
 }

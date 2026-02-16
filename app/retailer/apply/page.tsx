@@ -1,19 +1,18 @@
 /**
- * Dashboard Layout
- * Protected layout for authenticated users
- * Includes sidebar navigation
+ * Retailer Application Page
+ * Multi-step form for users to apply as retailers
  */
 
-import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import RetailerSidebar from '@/components/layout/RetailerSidebar';
+import { redirect } from 'next/navigation';
+import RetailerApplicationForm from './RetailerApplicationForm';
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  // Server-side authentication check
+export const metadata = {
+  title: 'Apply as Retailer | Unlimited Perfect Deals',
+  description: 'Turn excess inventory into revenue',
+};
+
+export default async function RetailerApplyPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -21,7 +20,7 @@ export default async function DashboardLayout({
     redirect('/auth/login');
   }
 
-  // Check if user has a retailer account linked in profile
+  // Check if user already has a retailer account in profile
   const { data: profile } = await supabase
     .from('user_profiles')
     .select('retailer_id')
@@ -60,31 +59,23 @@ export default async function DashboardLayout({
     retailerStatus = retailer?.status;
   }
 
-  // If no retailer account exists at all, redirect to apply
-  if (!retailerId) {
-    redirect('/retailer/apply');
+  // If retailer exists, redirect based on status
+  if (retailerId && retailerStatus) {
+    // If approved, go to dashboard
+    if (retailerStatus === 'approved') {
+      redirect('/retailer/dashboard');
+    }
+    
+    // If pending or rejected, go to pending page
+    if (retailerStatus === 'pending' || retailerStatus === 'rejected') {
+      redirect('/retailer/pending');
+    }
   }
 
-  // If pending or rejected, redirect to pending page
-  if (retailerStatus !== 'approved') {
-    redirect('/retailer/pending');
-  }
-
-  // Dashboard is now accessible to approved retailers only
+  // No retailer account exists - show application form
   return (
-    <div className="min-h-screen bg-gray-50">
-      <RetailerSidebar />
-
-      {/* Main content */}
-      <div className="lg:pl-[220px]">
-        {/* Mobile header spacer */}
-        <div className="h-14 lg:hidden" />
-
-        {/* Page content */}
-        <main className="min-h-screen">
-          {children}
-        </main>
-      </div>
+    <div className="min-h-screen bg-[#f5f2eb]">
+      <RetailerApplicationForm userEmail={user.email || ''} userId={user.id} />
     </div>
   );
 }

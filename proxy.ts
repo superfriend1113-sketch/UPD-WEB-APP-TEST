@@ -3,9 +3,15 @@
  * Handles path-based routing and authentication checks
  * Routes:
  * - / -> Public homepage and consumer features
- * - /retailer/* -> Retailer portal (dashboard, deal management)
- * - /watchlist, /alerts -> Consumer protected routes
+ * - /retailer/* -> Retailer portal (accessible to all authenticated users)
+ *   - /retailer/apply -> Application form for users without retailer account
+ *   - /retailer/pending -> Status page for pending/rejected applications
+ *   - /retailer/dashboard -> Dashboard for approved retailers only
+ * - /watchlist, /alerts, /profile -> Consumer protected routes
  * - /auth/* -> Authentication pages
+ * 
+ * Note: All users sign up as consumers. Retailer access is granted through
+ * the application process which creates a retailer account linked to the user.
  */
 
 import { NextResponse } from 'next/server';
@@ -83,32 +89,8 @@ export async function proxy(request: NextRequest) {
 
   // If logged-in user visits auth pages, redirect them away
   if (user && pathname.startsWith('/auth')) {
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role, retailer_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role === 'retailer') {
-      // Redirect retailers away from auth pages to their portal
-      if (profile.retailer_id) {
-        const { data: retailer } = await supabase
-          .from('retailers')
-          .select('status')
-          .eq('id', profile.retailer_id)
-          .single();
-
-        if (retailer?.status === 'approved') {
-          return NextResponse.redirect(new URL('/retailer/dashboard', request.url));
-        }
-      }
-      return NextResponse.redirect(new URL('/retailer/pending', request.url));
-    }
-
-    // Redirect consumers away from auth pages if already logged in
-    if (profile?.role === 'consumer') {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
+    // Redirect authenticated users away from auth pages
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // RETAILER ROUTES (/retailer/*)
@@ -118,18 +100,8 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/auth/login?returnUrl=' + pathname, request.url));
     }
 
-    // Verify user is a retailer
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role, retailer_id')
-      .eq('id', user.id)
-      .single();
-
-    // Block non-retailers
-    if (profile?.role !== 'retailer') {
-      return NextResponse.redirect(new URL('/?error=unauthorized', request.url));
-    }
-
+    // All authenticated users can access retailer routes
+    // The dashboard layout will handle redirects based on retailer_id and status
     return response;
   }
 
@@ -143,18 +115,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/auth/login?returnUrl=' + pathname, request.url));
     }
 
-    // Verify user is a consumer (not a retailer)
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    // Redirect retailers to their dashboard
-    if (profile?.role === 'retailer') {
-      return NextResponse.redirect(new URL('/retailer/dashboard', request.url));
-    }
-
+    // All authenticated users can access consumer routes
     return response;
   }
 

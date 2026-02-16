@@ -1,8 +1,18 @@
+/**
+ * Retailer Pending Approval Page
+ * Shown to users whose retailer application is pending review
+ */
+
+import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
 
-export default async function RetailerPendingPage() {
+export const metadata = {
+  title: 'Application Pending | Unlimited Perfect Deals',
+  description: 'Your retailer application is under review',
+};
+
+export default async function PendingPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -10,125 +20,123 @@ export default async function RetailerPendingPage() {
     redirect('/auth/login');
   }
 
-  // Fetch user profile
+  // Check if user has a retailer account in profile
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, retailer_id')
+    .select('retailer_id')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
-  // Check if user is a retailer
-  if (profile?.role !== 'retailer' || !profile?.retailer_id) {
-    redirect('/');
-  }
-
-  // Fetch actual retailer status from retailers table
-  const { data: retailer } = await supabase
+  // Also check if there's a retailer record by user_id (in case retailer_id wasn't set in profile)
+  const { data: retailerByUserId } = await supabase
     .from('retailers')
-    .select('status')
-    .eq('id', profile.retailer_id)
-    .single();
+    .select('id, name, status, created_at')
+    .eq('user_id', user.id)
+    .maybeSingle();
 
-  // Redirect based on actual retailer status
-  if (!retailer || retailer.status !== 'pending') {
-    // If approved, go to dashboard
-    if (retailer?.status === 'approved') {
-      redirect('/retailer/dashboard');
-    }
-    // If rejected, go to rejected page
-    if (retailer?.status === 'rejected') {
-      redirect('/retailer/rejected');
-    }
-    // If no retailer found or unknown status, go home
-    redirect('/');
+  // Determine the retailer to use
+  let retailerId = profile?.retailer_id;
+  let retailer = null;
+
+  // If no retailer_id in profile but retailer exists by user_id, use that
+  if (!retailerId && retailerByUserId) {
+    retailerId = retailerByUserId.id;
+    retailer = retailerByUserId;
+
+    // Fix the profile to have the correct retailer_id
+    await supabase
+      .from('user_profiles')
+      .update({ retailer_id: retailerId })
+      .eq('id', user.id);
+  } else if (retailerId) {
+    // Get retailer data
+    const { data: retailerData } = await supabase
+      .from('retailers')
+      .select('name, status, created_at')
+      .eq('id', retailerId)
+      .maybeSingle();
+    
+    retailer = retailerData;
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
-          {/* Icon */}
-          <div className="flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mx-auto mb-6">
-            <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+  // If no retailer account exists, redirect to apply
+  if (!retailerId || !retailer) {
+    redirect('/retailer/apply');
+  }
+
+  // If approved, redirect to dashboard
+  if (retailer.status === 'approved') {
+    redirect('/retailer/dashboard');
+  }
+
+  // If rejected, show rejection message
+  if (retailer.status === 'rejected') {
+    return (
+      <div className="min-h-screen bg-[#f5f2eb] flex items-center justify-center p-4">
+        <div className="max-w-[500px] text-center">
+          <div className="w-[72px] h-[72px] bg-[#c8401a] rounded-full flex items-center justify-center text-[32px] mx-auto mb-6">
+            🚫
           </div>
-
-          {/* Title */}
-          <h1 className="text-3xl font-bold text-gray-900 text-center mb-4">
-            Application Under Review
-          </h1>
-
-          {/* Message */}
-          <p className="text-gray-600 text-center mb-8">
-            Thank you for applying to become a retailer on Unlimited Perfect Deals. Your application is currently being reviewed by our team.
+          <h1 className="font-display text-[40px] mb-3">Application Rejected</h1>
+          <p className="text-[#888070] text-[15px] leading-[1.7] mb-5">
+            Unfortunately, your retailer application has been rejected. Please contact support if you believe this was an error.
           </p>
-
-          {/* Status Info */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-8">
-            <h2 className="font-semibold text-amber-900 mb-3">
-              What happens next?
-            </h2>
-            <ul className="space-y-2 text-amber-800 text-sm">
-              <li className="flex items-start gap-2">
-                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Our team will review your application within 2-3 business days</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>You'll receive an email notification once a decision is made</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>If approved, you'll gain immediate access to the retailer dashboard</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Consumer Access Notice */}
-          <div className="bg-teal-50 border border-teal-200 rounded-lg p-6 mb-8">
-            <div className="flex items-start gap-3">
-              <svg className="w-6 h-6 text-teal-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <h3 className="font-semibold text-teal-900 mb-1">
-                  Shop While You Wait
-                </h3>
-                <p className="text-teal-800 text-sm">
-                  While your application is being reviewed, you can browse deals, add items to your cart, and make purchases as a consumer.
-                </p>
-              </div>
+          <span className="inline-flex items-center gap-[6px] text-[12px] font-semibold px-[14px] py-[6px] rounded-[20px] bg-[#fef2f0] text-[#c8401a] border border-[#f0b0a0] uppercase tracking-[0.4px]">
+            <span className="w-[6px] h-[6px] rounded-full bg-[#c8401a]"></span>
+            REJECTED
+          </span>
+          <div className="mt-8 p-4 bg-[#ede9df] border border-[#d6d0c4] rounded-[6px] text-left">
+            <div className="font-bold mb-2 text-[11px] uppercase tracking-[0.8px] text-[#888070]">
+              Business Name
             </div>
+            <div className="font-semibold text-[16px]">{retailer.name}</div>
+            <div className="text-[#888070] text-[13px] mt-[2px]">{user.email}</div>
           </div>
-
-          {/* Actions */}
-          <div className="space-y-3">
-            <Link
-              href="/"
-              className="block w-full px-6 py-3 bg-teal-600 text-white text-center font-semibold rounded-lg hover:bg-teal-700 transition-colors"
-            >
-              Browse Deals
-            </Link>
-            <Link
-              href="/contact-us"
-              className="block w-full px-6 py-3 border-2 border-gray-300 text-gray-700 text-center font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Contact Support
-            </Link>
-          </div>
-
-          {/* Additional Info */}
-          <p className="text-sm text-gray-500 text-center mt-6">
-            Have questions about your application? Feel free to reach out to our support team.
-          </p>
+          <Link
+            href="/"
+            className="inline-block mt-6 px-[22px] py-[10px] border-[1.5px] border-[#d6d0c4] rounded-[6px] text-[14px] font-semibold hover:border-[#0d0d0d] transition-all"
+          >
+            ← Return to Home
+          </Link>
         </div>
+      </div>
+    );
+  }
+
+  // Show pending status
+  return (
+    <div className="min-h-screen bg-[#f5f2eb] flex items-center justify-center p-4">
+      <div className="max-w-[500px] text-center">
+        <div className="w-[72px] h-[72px] bg-[#0d0d0d] rounded-full flex items-center justify-center text-[32px] mx-auto mb-6">
+          📋
+        </div>
+        <h1 className="font-display text-[40px] mb-3">Application Under Review</h1>
+        <p className="text-[#888070] text-[15px] leading-[1.7] mb-5">
+          Thank you for applying to Unlimited Perfect Deals. Your business is currently under review by our partner team.
+        </p>
+        <span className="inline-flex items-center gap-[6px] text-[12px] font-semibold px-[14px] py-[6px] rounded-[20px] bg-[#fef8e7] text-[#856404] border border-[#f0c040] uppercase tracking-[0.4px]">
+          <span className="w-[6px] h-[6px] rounded-full bg-[#856404]"></span>
+          PENDING REVIEW
+        </span>
+        <p className="text-[13px] text-[#888070] mt-5">
+          You will receive an email notification once your application has been evaluated. Access to the retailer dashboard requires manual approval.
+        </p>
+        <div className="mt-8 p-4 bg-[#ede9df] border border-[#d6d0c4] rounded-[6px] text-left">
+          <div className="font-bold mb-2 text-[11px] uppercase tracking-[0.8px] text-[#888070]">
+            Submitted Business
+          </div>
+          <div className="font-semibold text-[16px]">{retailer?.name}</div>
+          <div className="text-[#888070] text-[13px] mt-[2px]">{user.email}</div>
+          <div className="text-[#888070] text-[12px] mt-3">
+            Submitted: {new Date(retailer?.created_at || '').toLocaleDateString()}
+          </div>
+        </div>
+        <Link
+          href="/"
+          className="inline-block mt-6 px-[22px] py-[10px] border-[1.5px] border-[#d6d0c4] rounded-[6px] text-[14px] font-semibold hover:border-[#0d0d0d] transition-all"
+        >
+          ← Return to Home
+        </Link>
       </div>
     </div>
   );

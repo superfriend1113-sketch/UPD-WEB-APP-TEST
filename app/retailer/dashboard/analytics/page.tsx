@@ -13,7 +13,16 @@ export const metadata = {
   description: 'View your deal performance',
 };
 
-async function getDealAnalytics(retailerId: string) {
+async function getDealAnalytics(retailerId: string | null) {
+  if (!retailerId) {
+    return {
+      deals: [],
+      totalViews: 0,
+      totalClicks: 0,
+      averageCTR: 0,
+    };
+  }
+
   const supabase = await createClient();
   const { data: deals, error } = await supabase
     .from('deals')
@@ -54,15 +63,12 @@ export default async function AnalyticsPage() {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, retailer_id')
+    .select('retailer_id')
     .eq('id', user.id)
     .single();
 
-  if (!profile?.retailer_id) {
-    redirect('/retailer/pending');
-  }
-
-  const analytics = await getDealAnalytics(profile.retailer_id);
+  // Layout already handles retailer_id check and status check
+  const analytics = await getDealAnalytics(profile?.retailer_id || null);
 
   return (
     <div className="p-6">

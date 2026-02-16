@@ -12,7 +12,11 @@ export const metadata = {
   description: 'Edit your deal',
 };
 
-async function getDeal(dealId: string, retailerId: string) {
+async function getDeal(dealId: string, retailerId: string | null) {
+  if (!retailerId) {
+    return null;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('deals')
@@ -55,14 +59,15 @@ export default async function EditDealPage({ params }: { params: Promise<{ id: s
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role, retailer_id')
+    .select('retailer_id')
     .eq('id', user.id)
     .single();
 
   if (!profile?.retailer_id) {
-    redirect('/retailer/pending');
+    redirect('/retailer/apply');
   }
 
+  // Layout already handles retailer_id check and status check
   const deal = await getDeal(id, profile.retailer_id);
 
   if (!deal) {

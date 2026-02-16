@@ -2,19 +2,18 @@
 
 /**
  * Retailer Sidebar Component
- * Navigation sidebar for retailer dashboard
+ * Pixel-perfect implementation matching UPD design
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/config';
 
 const navigation = [
-  { name: 'Dashboard', href: '/retailer/dashboard', icon: HomeIcon },
-  { name: 'My Deals', href: '/retailer/dashboard/deals', icon: TagIcon },
-  { name: 'Create Deal', href: '/retailer/dashboard/deals/new', icon: PlusIcon },
-  { name: 'Analytics', href: '/retailer/dashboard/analytics', icon: ChartIcon },
+  { name: 'Overview', href: '/retailer/dashboard', icon: '📊', section: 'dashboard' },
+  { name: 'Upload Inventory', href: '/retailer/dashboard/deals/new', icon: '📤', section: 'dashboard' },
+  { name: 'My Listings', href: '/retailer/dashboard/deals', icon: '📦', section: 'dashboard' },
 ];
 
 export default function RetailerSidebar() {
@@ -22,16 +21,44 @@ export default function RetailerSidebar() {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [retailerName, setRetailerName] = useState('');
+  const [retailerInitial, setRetailerInitial] = useState('A');
+  const [retailerStatus, setRetailerStatus] = useState('approved');
+
+  useEffect(() => {
+    async function fetchRetailerInfo() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('retailer_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.retailer_id) {
+        const { data: retailer } = await supabase
+          .from('retailers')
+          .select('name, status')
+          .eq('id', profile.retailer_id)
+          .single();
+
+        if (retailer) {
+          setRetailerName(retailer.name);
+          setRetailerInitial(retailer.name.charAt(0).toUpperCase());
+          setRetailerStatus(retailer.status);
+        }
+      }
+    }
+    fetchRetailerInfo();
+  }, []);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
     
     setIsLoggingOut(true);
     try {
-      // Sign out from Supabase
       await supabase.auth.signOut();
-      
-      // Full page reload to clear all cached server state
       window.location.href = '/';
     } catch (error) {
       console.error('Logout error:', error);
@@ -42,11 +69,11 @@ export default function RetailerSidebar() {
   return (
     <>
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 px-4 py-3 z-40">
+      <div className="lg:hidden fixed top-20 left-0 right-0 bg-[#0d0d0d] border-b border-[#222] px-4 py-3 z-40">
         <button
           type="button"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="text-gray-500 hover:text-gray-600"
+          className="text-[#999] hover:text-[#f5f2eb]"
         >
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -65,33 +92,46 @@ export default function RetailerSidebar() {
       {/* Sidebar */}
       <div
         className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out
+          fixed inset-y-0 left-0 z-50 w-[220px] bg-[#0d0d0d] transform transition-transform duration-200 ease-in-out
           lg:translate-x-0
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center justify-between h-14 px-4 border-b border-gray-200">
-            <Link href="/retailer/dashboard" className="text-lg font-bold text-gray-900">
-              Retailer Portal
-            </Link>
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="lg:hidden text-gray-500 hover:text-gray-600"
-            >
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        <div className="flex flex-col h-full pt-6">
+          {/* Retailer Avatar Section */}
+          <div className="px-5 pb-5 border-b border-[#222] mb-2">
+            <div className="w-10 h-10 bg-[#c8401a] rounded-full flex items-center justify-center font-display text-[20px] text-white mb-[10px]">
+              {retailerInitial}
+            </div>
+            <div className="text-[13.5px] font-semibold text-[#f5f2eb] leading-tight">
+              {retailerName || 'Retailer'}
+            </div>
+            <div className="mt-[2px]">
+              {retailerStatus === 'approved' ? (
+                <span className="inline-flex items-center gap-[6px] text-[10px] font-semibold px-2 py-[2px] rounded-[20px] bg-[#f0faf5] text-[#1e8a52] uppercase tracking-[0.4px]">
+                  <span className="w-[6px] h-[6px] rounded-full bg-[#1e8a52]"></span>
+                  APPROVED
+                </span>
+              ) : retailerStatus === 'pending' ? (
+                <span className="inline-flex items-center gap-[6px] text-[10px] font-semibold px-2 py-[2px] rounded-[20px] bg-[#fef8e7] text-[#856404] uppercase tracking-[0.4px]">
+                  <span className="w-[6px] h-[6px] rounded-full bg-[#856404]"></span>
+                  PENDING
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-[6px] text-[10px] font-semibold px-2 py-[2px] rounded-[20px] bg-[#fef2f0] text-[#c8401a] uppercase tracking-[0.4px]">
+                  <span className="w-[6px] h-[6px] rounded-full bg-[#c8401a]"></span>
+                  REJECTED
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 px-0 py-0 overflow-y-auto">
+            <div className="text-[10px] font-semibold text-[#555] uppercase tracking-[1.2px] px-5 mb-2 mt-2">
+              DASHBOARD
+            </div>
             {navigation.map((item) => {
-              // For exact match routes (like /dashboard), only match exactly
-              // For sub-routes, match if pathname starts with the href
               const isActive = item.href === '/retailer/dashboard'
                 ? pathname === '/retailer/dashboard'
                 : pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -101,79 +141,51 @@ export default function RetailerSidebar() {
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`
-                    flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
+                    flex items-center gap-[10px] px-5 py-[10px] text-[13.5px] transition-all border-l-[3px]
                     ${isActive
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'text-[#f5f2eb] border-l-[#c8401a] bg-[rgba(200,64,26,0.12)]'
+                      : 'text-[#999] border-l-transparent hover:text-[#f5f2eb] hover:bg-[rgba(255,255,255,0.05)]'
                     }
                   `}
                 >
-                  <item.icon
-                    className={`
-                      mr-3 h-5 w-5 flex-shrink-0
-                      ${isActive ? 'text-blue-700' : 'text-gray-500'}
-                    `}
-                  />
+                  <span className="text-[16px] w-[18px] text-center">{item.icon}</span>
                   {item.name}
                 </Link>
               );
             })}
+
+            <div className="text-[10px] font-semibold text-[#555] uppercase tracking-[1.2px] px-5 mb-2 mt-5">
+              ACCOUNT
+            </div>
+            <Link
+              href="/retailer/dashboard/settings"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`
+                flex items-center gap-[10px] px-5 py-[10px] text-[13.5px] transition-all border-l-[3px]
+                ${pathname === '/retailer/dashboard/settings'
+                  ? 'text-[#f5f2eb] border-l-[#c8401a] bg-[rgba(200,64,26,0.12)]'
+                  : 'text-[#999] border-l-transparent hover:text-[#f5f2eb] hover:bg-[rgba(255,255,255,0.05)]'
+                }
+              `}
+            >
+              <span className="text-[16px] w-[18px] text-center">⚙️</span>
+              Settings
+            </Link>
           </nav>
 
           {/* Logout button */}
-          <div className="border-t border-gray-200 px-2 py-4">
+          <div className="border-t border-[#222] px-0 py-4">
             <button
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50"
+              className="flex items-center w-full gap-[10px] px-5 py-[10px] text-[13.5px] text-[#999] hover:text-[#f5f2eb] hover:bg-[rgba(255,255,255,0.05)] transition-all disabled:opacity-50 border-l-[3px] border-l-transparent"
             >
-              <LogoutIcon className="mr-3 h-5 w-5 text-gray-500" />
+              <span className="text-[16px] w-[18px] text-center">🚪</span>
               {isLoggingOut ? 'Logging out...' : 'Logout'}
             </button>
           </div>
         </div>
       </div>
     </>
-  );
-}
-
-// Icon components
-function HomeIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    </svg>
-  );
-}
-
-function TagIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-    </svg>
-  );
-}
-
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-    </svg>
-  );
-}
-
-function ChartIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>
-  );
-}
-
-function LogoutIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-    </svg>
   );
 }
