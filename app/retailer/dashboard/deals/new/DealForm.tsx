@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Toast from '@/components/ui/Toast';
 import { supabase } from '@/lib/supabase/config';
 
 interface Category {
@@ -40,6 +41,11 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; show: boolean }>({
+    message: '',
+    type: 'info',
+    show: false,
+  });
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     description: initialData?.description || '',
@@ -51,6 +57,11 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
     start_date: initialData?.start_date ? new Date(initialData.start_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     end_date: initialData?.end_date ? new Date(initialData.end_date).toISOString().split('T')[0] : '',
     is_active: initialData?.is_active ?? true,
+    sku: '',
+    condition: 'Overstock',
+    quantity: '1',
+    location: '',
+    minimum_price: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -70,8 +81,18 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
     setIsLoading(true);
 
     try {
+      // Get current user ID for RLS policy
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError('You must be logged in to create a deal');
+        setIsLoading(false);
+        return;
+      }
+
       const originalPrice = parseFloat(formData.original_price);
       const discountedPrice = parseFloat(formData.discounted_price);
+      const minimumPrice = formData.minimum_price ? parseFloat(formData.minimum_price) : null;
+      const quantity = parseInt(formData.quantity) || 1;
 
       if (isNaN(originalPrice) || isNaN(discountedPrice)) {
         setError('Please enter valid prices');
@@ -85,11 +106,24 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
         return;
       }
 
+      if (minimumPrice && discountedPrice < minimumPrice) {
+        setError('Current price must be greater than or equal to minimum price');
+        setIsLoading(false);
+        return;
+      }
+
+      if (quantity < 1) {
+        setError('Quantity must be at least 1');
+        setIsLoading(false);
+        return;
+      }
+
       const dealData = {
         title: formData.title,
         description: formData.description,
         original_price: originalPrice,
         discounted_price: discountedPrice,
+        minimum_price: minimumPrice,
         category_id: formData.category_id,
         retailer_id: retailerId,
         deal_url: formData.deal_url,
@@ -98,6 +132,15 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
         end_date: formData.end_date || null,
         is_active: formData.is_active,
         status: 'pending',
+        sku: formData.sku || null,
+        condition: formData.condition,
+        quantity: quantity,
+        location: formData.location || null,
+        created_by: user.id,
+        // Legacy fields for backward compatibility (trigger will auto-populate these)
+        product_name: formData.title,
+        price: discountedPrice, // Now in dollars, not cents
+        savings_percentage: Math.round(((originalPrice - discountedPrice) / originalPrice) * 100),
       };
 
       if (initialData?.id) {
@@ -113,8 +156,15 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
           return;
         }
 
-        alert('Deal updated successfully! Changes will be reviewed by admin.');
-        router.push('/retailer/dashboard/deals');
+        setToast({
+          message: 'Deal updated successfully! Changes will be reviewed by admin.',
+          type: 'success',
+          show: true,
+        });
+        
+        setTimeout(() => {
+          router.push('/retailer/dashboard/deals');
+        }, 1500);
       } else {
         const { error: insertError } = await supabase
           .from('deals')
@@ -126,8 +176,15 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
           return;
         }
 
-        alert('Deal submitted successfully! It will be reviewed by our team.');
-        router.push('/retailer/dashboard/deals');
+        setToast({
+          message: 'Deal submitted successfully! It will be reviewed by our team.',
+          type: 'success',
+          show: true,
+        });
+        
+        setTimeout(() => {
+          router.push('/retailer/dashboard/deals');
+        }, 1500);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -377,6 +434,14 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
           {isLoading ? 'Publishing...' : initialData ? 'Update Listing' : 'Publish Listing →'}
         </button>
       </div>
+
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        show={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
     </form>
   );
 }
