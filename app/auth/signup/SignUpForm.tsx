@@ -121,7 +121,7 @@ export default function SignUpForm() {
       {/* Mobile Logo */}
       <div className="lg:hidden flex justify-center mb-8">
         <Image
-          src="/logo.png"
+          src="/logo.svg"
           alt="Unlimited Perfect Deals"
           width={180}
           height={45}

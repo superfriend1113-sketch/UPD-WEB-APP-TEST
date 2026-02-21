@@ -14,7 +14,7 @@ export default function Hero() {
           {/* Left Content */}
           <div className="space-y-6">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-              Turning excess inventory into opportunity — 
+              Turning excess inventory into opportunity  
               <span className="text-teal-900"> instantly, intelligently, profitably.</span>
             </h1>
             

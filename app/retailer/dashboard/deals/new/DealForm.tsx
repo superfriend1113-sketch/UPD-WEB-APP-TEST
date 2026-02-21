@@ -31,6 +31,7 @@ interface DealFormProps {
     category_id: string;
     deal_url: string;
     image_url: string;
+    images?: string[];
     start_date: string;
     end_date: string;
     is_active: boolean;
@@ -40,6 +41,7 @@ interface DealFormProps {
 export default function DealForm({ retailerId, categories, initialData }: DealFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; show: boolean }>({
     message: '',
@@ -63,6 +65,13 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
     location: '',
     minimum_price: '',
   });
+  const [uploadedImages, setUploadedImages] = useState<string[]>(
+    initialData?.images && initialData.images.length > 0 
+      ? initialData.images 
+      : initialData?.image_url 
+        ? [initialData.image_url] 
+        : []
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const value = e.target.type === 'checkbox' 
@@ -72,6 +81,90 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
     setFormData({
       ...formData,
       [e.target.name]: value,
+    });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        // Validate file type
+        const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+          throw new Error(`Invalid file type: ${file.name}. Only PNG, JPG, and WEBP are allowed.`);
+        }
+
+        // Validate file size (50MB)
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        if (file.size > maxSize) {
+          const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+          throw new Error(`File too large: ${file.name} (${sizeMB}MB). Maximum size is 50MB.`);
+        }
+
+        // Create unique filename
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${retailerId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        // Upload to Supabase Storage
+        const { data, error: uploadError } = await supabase.storage
+          .from('deal-images')
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          throw new Error(`Upload failed for ${file.name}: ${uploadError.message}`);
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('deal-images')
+          .getPublicUrl(fileName);
+
+        return publicUrl;
+      });
+
+      const newImageUrls = await Promise.all(uploadPromises);
+      const allImages = [...uploadedImages, ...newImageUrls];
+      
+      setUploadedImages(allImages);
+      setFormData({
+        ...formData,
+        image_url: allImages[0], // Set first image as primary
+      });
+
+      setToast({
+        message: `${newImageUrls.length} image(s) uploaded successfully`,
+        type: 'success',
+        show: true,
+      });
+    } catch (err) {
+      console.error('Error uploading files:', err);
+      setError(err instanceof Error ? err.message : 'Failed to upload images');
+      setToast({
+        message: err instanceof Error ? err.message : 'Failed to upload images',
+        type: 'error',
+        show: true,
+      });
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    const newImages = uploadedImages.filter((_, index) => index !== indexToRemove);
+    setUploadedImages(newImages);
+    setFormData({
+      ...formData,
+      image_url: newImages[0] || '', // Set first remaining image as primary
     });
   };
 
@@ -127,7 +220,8 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
         category_id: formData.category_id,
         retailer_id: retailerId,
         deal_url: formData.deal_url,
-        image_url: formData.image_url,
+        image_url: uploadedImages[0] || formData.image_url, // Primary image
+        images: uploadedImages.length > 0 ? uploadedImages : (formData.image_url ? [formData.image_url] : []), // All images
         start_date: formData.start_date,
         end_date: formData.end_date || null,
         is_active: formData.is_active,
@@ -207,6 +301,9 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
           <input
             type="text"
             name="sku"
+            value={formData.sku}
+            onChange={handleChange}
+            required
             placeholder="APX-0055"
             className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
           />
@@ -221,7 +318,7 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
             value={formData.title}
             onChange={handleChange}
             required
-            placeholder="e.g. Sony XB700 Headphones — Overstock"
+            placeholder="e.g. Sony XB700 Headphones  Overstock"
             className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
           />
         </div>
@@ -254,6 +351,8 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
           </label>
           <select
             name="condition"
+            value={formData.condition}
+            onChange={handleChange}
             className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
           >
             <option>Overstock</option>
@@ -270,6 +369,8 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
           <input
             type="number"
             name="quantity"
+            value={formData.quantity}
+            onChange={handleChange}
             placeholder="e.g. 25"
             min="1"
             className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
@@ -323,6 +424,9 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
           <input
             type="number"
             name="minimum_price"
+            value={formData.minimum_price}
+            onChange={handleChange}
+            required
             placeholder="150.00"
             step="0.01"
             min="0"
@@ -340,6 +444,8 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
           <input
             type="text"
             name="location"
+            value={formData.location}
+            onChange={handleChange}
             placeholder="Chicago, IL"
             className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white"
           />
@@ -377,31 +483,59 @@ export default function DealForm({ retailerId, categories, initialData }: DealFo
       {/* Product Image */}
       <div className="flex flex-col gap-[5px]">
         <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
-          Product Image
+          Product Images
         </label>
-        <div className="border-2 border-dashed border-[#d6d0c4] rounded-[6px] p-5 text-center cursor-pointer bg-[#ede9df] text-[#888070] text-[13px] transition-all hover:border-[#0d0d0d] hover:text-[#0d0d0d]">
-          <span className="text-[24px] block mb-[6px]">📁</span>
-          Click to upload or drag & drop<br />
-          <span className="text-[12px]">PNG, JPG up to 10MB</span>
-        </div>
-        <input
-          type="url"
-          name="image_url"
-          value={formData.image_url}
-          onChange={handleChange}
-          placeholder="Or paste image URL"
-          className="border-[1.5px] border-[#d6d0c4] rounded-[6px] px-3 py-[9px] font-body text-[14px] bg-[#ede9df] text-[#0d0d0d] transition-all outline-none focus:border-[#0d0d0d] focus:bg-white mt-2"
-        />
-        {formData.image_url && (
-          <div className="mt-2">
-            <img
-              src={formData.image_url}
-              alt="Preview"
-              className="w-full max-w-md h-48 object-cover rounded-[6px] border border-[#d6d0c4]"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Invalid+Image+URL';
-              }}
-            />
+        <label className="border-2 border-dashed border-[#d6d0c4] rounded-[6px] p-5 text-center cursor-pointer bg-[#ede9df] text-[#888070] text-[13px] transition-all hover:border-[#0d0d0d] hover:text-[#0d0d0d] block">
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp"
+            onChange={handleFileUpload}
+            disabled={isUploading}
+            multiple
+            className="hidden"
+          />
+          {isUploading ? (
+            <>
+              <span className="text-[24px] block mb-[6px]">⏳</span>
+              Uploading...
+            </>
+          ) : (
+            <>
+              <span className="text-[24px] block mb-[6px]">📁</span>
+              Click to upload or drag & drop<br />
+              <span className="text-[12px]">PNG, JPG, WEBP up to 50MB each • Multiple files supported</span>
+            </>
+          )}
+        </label>
+        
+        {/* Image Previews */}
+        {uploadedImages.length > 0 && (
+          <div className="mt-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {uploadedImages.map((imageUrl, index) => (
+              <div key={index} className="relative group">
+                <img
+                  src={imageUrl}
+                  alt={`Product image ${index + 1}`}
+                  className="w-full h-32 object-cover rounded-[6px] border border-[#d6d0c4]"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Invalid+Image';
+                  }}
+                />
+                {index === 0 && (
+                  <div className="absolute top-1 left-1 bg-[#1e8a52] text-white text-[10px] font-bold px-2 py-1 rounded">
+                    Primary
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(index)}
+                  className="absolute top-1 right-1 bg-[#c8401a] text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[14px] font-bold hover:bg-[#a83416]"
+                  aria-label="Remove image"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>

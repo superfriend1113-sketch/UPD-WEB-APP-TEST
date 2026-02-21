@@ -58,7 +58,7 @@ export default function HowItWorksPage() {
                 Intelligent Distribution Engine
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Our system determines the optimal path for each product — private deals, flash offers, bulk buyers, or consumer listings — based on velocity, margin recovery, and brand protection rules.
+                Our system determines the optimal path for each product  private deals, flash offers, bulk buyers, or consumer listings  based on velocity, margin recovery, and brand protection rules.
               </p>
             </div>
             <div className="relative order-1 md:order-2">

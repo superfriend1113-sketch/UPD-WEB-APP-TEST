@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import DealGrid from '@/components/deals/DealGrid';
 import CategoryFilter from '@/components/deals/CategoryFilter';
 import PriceRangeFilter from '@/components/deals/PriceRangeFilter';
+import SearchBar from '@/components/deals/SearchBar';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import Button from '@/components/common/Button';
@@ -34,6 +35,7 @@ export default function DealsPageClient({ categoryParam }: DealsPageClientProps)
     minPrice: null,
     maxPrice: null,
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch data on mount
   useEffect(() => {
@@ -61,9 +63,34 @@ export default function DealsPageClient({ categoryParam }: DealsPageClientProps)
     setFilters(prev => ({ ...prev, categorySlug: categoryParam }));
   }, [categoryParam]);
 
-  // Apply filters
-  const filteredDeals = applyFilters(deals, filters);
+  // Apply filters and search
+  let filteredDeals = applyFilters(deals, filters);
+  
+  // Apply search query
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase().trim();
+    filteredDeals = filteredDeals.filter(deal => {
+      // Search in product title
+      const titleMatch = (deal.productName || '').toLowerCase().includes(query);
+      
+      // Search in category
+      const categoryMatch = (deal.category || '').toLowerCase().includes(query);
+      
+      // Search in retailer/store name
+      const storeMatch = (deal.retailer || '').toLowerCase().includes(query);
+      
+      // Search in description
+      const descriptionMatch = (deal.description || '').toLowerCase().includes(query);
+      
+      return titleMatch || categoryMatch || storeMatch || descriptionMatch;
+    });
+  }
+  
   const dealCounts = calculateCategoryCounts(deals, categories);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
 
   const handlePriceRangeChange = (min: number | null, max: number | null) => {
     setFilters(prev => ({
@@ -79,6 +106,7 @@ export default function DealsPageClient({ categoryParam }: DealsPageClientProps)
       minPrice: null,
       maxPrice: null,
     });
+    setSearchQuery('');
     router.push('/deals');
   };
 
@@ -103,7 +131,7 @@ export default function DealsPageClient({ categoryParam }: DealsPageClientProps)
     );
   }
 
-  const hasActiveFilters = filters.categorySlug || filters.minPrice !== null || filters.maxPrice !== null;
+  const hasActiveFilters = filters.categorySlug || filters.minPrice !== null || filters.maxPrice !== null || searchQuery.trim() !== '';
   const selectedCategoryName = categories.find(c => c.slug === filters.categorySlug)?.name;
 
   return (
@@ -114,9 +142,12 @@ export default function DealsPageClient({ categoryParam }: DealsPageClientProps)
           <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
             {selectedCategoryName ? `${selectedCategoryName} Deals` : 'All Deals'}
           </h1>
-          <p className="text-base text-gray-600">
+          <p className="text-base text-gray-600 mb-4">
             {filteredDeals.length} {filteredDeals.length === 1 ? 'deal' : 'deals'} available
           </p>
+          
+          {/* Search Bar */}
+          <SearchBar onSearch={handleSearch} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -135,6 +166,11 @@ export default function DealsPageClient({ categoryParam }: DealsPageClientProps)
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {searchQuery && (
+                    <span className="inline-flex items-center px-3 py-1 bg-blue-50 rounded-full text-xs font-medium text-blue-900 border border-blue-200">
+                      Search: "{searchQuery}"
+                    </span>
+                  )}
                   {selectedCategoryName && (
                     <span className="inline-flex items-center px-3 py-1 bg-teal-50 rounded-full text-xs font-medium text-teal-900 border border-teal-200">
                       {selectedCategoryName}

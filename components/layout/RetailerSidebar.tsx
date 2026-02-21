@@ -69,11 +69,11 @@ export default function RetailerSidebar() {
   return (
     <>
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-20 left-0 right-0 bg-[#0d0d0d] border-b border-[#222] px-4 py-3 z-40">
+      <div className="lg:hidden fixed top-20 left-0 right-0 bg-[#059669] border-b border-[rgba(255,255,255,0.2)] px-4 py-3 z-40">
         <button
           type="button"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="text-[#999] hover:text-[#f5f2eb]"
+          className="text-[rgba(255,255,255,0.8)] hover:text-white"
         >
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -92,24 +92,24 @@ export default function RetailerSidebar() {
       {/* Sidebar */}
       <div
         className={`
-          fixed inset-y-0 left-0 z-50 w-[220px] bg-[#0d0d0d] transform transition-transform duration-200 ease-in-out
+          fixed inset-y-0 left-0 z-50 w-[220px] bg-[#059669] transform transition-transform duration-200 ease-in-out
           lg:translate-x-0
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
         <div className="flex flex-col h-full pt-6">
           {/* Retailer Avatar Section */}
-          <div className="px-5 pb-5 border-b border-[#222] mb-2">
-            <div className="w-10 h-10 bg-[#c8401a] rounded-full flex items-center justify-center font-display text-[20px] text-white mb-[10px]">
+          <div className="px-5 pb-5 border-b border-[rgba(255,255,255,0.2)] mb-2">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center font-display text-[20px] text-[#059669] mb-[10px]">
               {retailerInitial}
             </div>
-            <div className="text-[13.5px] font-semibold text-[#f5f2eb] leading-tight">
+            <div className="text-[13.5px] font-semibold text-white leading-tight">
               {retailerName || 'Retailer'}
             </div>
             <div className="mt-[2px]">
               {retailerStatus === 'approved' ? (
-                <span className="inline-flex items-center gap-[6px] text-[10px] font-semibold px-2 py-[2px] rounded-[20px] bg-[#f0faf5] text-[#1e8a52] uppercase tracking-[0.4px]">
-                  <span className="w-[6px] h-[6px] rounded-full bg-[#1e8a52]"></span>
+                <span className="inline-flex items-center gap-[6px] text-[10px] font-semibold px-2 py-[2px] rounded-[20px] bg-white text-[#059669] uppercase tracking-[0.4px]">
+                  <span className="w-[6px] h-[6px] rounded-full bg-[#059669]"></span>
                   APPROVED
                 </span>
               ) : retailerStatus === 'pending' ? (
@@ -128,13 +128,26 @@ export default function RetailerSidebar() {
 
           {/* Navigation */}
           <nav className="flex-1 px-0 py-0 overflow-y-auto">
-            <div className="text-[10px] font-semibold text-[#555] uppercase tracking-[1.2px] px-5 mb-2 mt-2">
+            <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.6)] uppercase tracking-[1.2px] px-5 mb-2 mt-2">
               DASHBOARD
             </div>
             {navigation.map((item) => {
-              const isActive = item.href === '/retailer/dashboard'
-                ? pathname === '/retailer/dashboard'
-                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              let isActive = false;
+              
+              if (item.href === '/retailer/dashboard') {
+                // Overview: only active on exact match
+                isActive = pathname === '/retailer/dashboard';
+              } else if (item.href === '/retailer/dashboard/deals/new') {
+                // Upload Inventory: only active on exact match or edit pages
+                isActive = pathname === '/retailer/dashboard/deals/new' || pathname.includes('/deals/') && pathname.includes('/edit');
+              } else if (item.href === '/retailer/dashboard/deals') {
+                // My Listings: active on deals list page only (not on /new or /edit)
+                isActive = pathname === '/retailer/dashboard/deals';
+              } else {
+                // Default: exact match or starts with
+                isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              }
+              
               return (
                 <Link
                   key={item.name}
@@ -143,8 +156,8 @@ export default function RetailerSidebar() {
                   className={`
                     flex items-center gap-[10px] px-5 py-[10px] text-[13.5px] transition-all border-l-[3px]
                     ${isActive
-                      ? 'text-[#f5f2eb] border-l-[#c8401a] bg-[rgba(200,64,26,0.12)]'
-                      : 'text-[#999] border-l-transparent hover:text-[#f5f2eb] hover:bg-[rgba(255,255,255,0.05)]'
+                      ? 'text-white border-l-white bg-[#1e3a8a]'
+                      : 'text-[rgba(255,255,255,0.8)] border-l-transparent hover:text-white hover:bg-[#1e3a8a]'
                     }
                   `}
                 >
@@ -154,7 +167,7 @@ export default function RetailerSidebar() {
               );
             })}
 
-            <div className="text-[10px] font-semibold text-[#555] uppercase tracking-[1.2px] px-5 mb-2 mt-5">
+            <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.6)] uppercase tracking-[1.2px] px-5 mb-2 mt-5">
               ACCOUNT
             </div>
             <Link
@@ -163,8 +176,8 @@ export default function RetailerSidebar() {
               className={`
                 flex items-center gap-[10px] px-5 py-[10px] text-[13.5px] transition-all border-l-[3px]
                 ${pathname === '/retailer/dashboard/settings'
-                  ? 'text-[#f5f2eb] border-l-[#c8401a] bg-[rgba(200,64,26,0.12)]'
-                  : 'text-[#999] border-l-transparent hover:text-[#f5f2eb] hover:bg-[rgba(255,255,255,0.05)]'
+                  ? 'text-white border-l-white bg-[#1e3a8a]'
+                  : 'text-[rgba(255,255,255,0.8)] border-l-transparent hover:text-white hover:bg-[#1e3a8a]'
                 }
               `}
             >
@@ -174,11 +187,11 @@ export default function RetailerSidebar() {
           </nav>
 
           {/* Logout button */}
-          <div className="border-t border-[#222] px-0 py-4">
+          <div className="border-t border-[rgba(255,255,255,0.2)] px-0 py-4">
             <button
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="flex items-center w-full gap-[10px] px-5 py-[10px] text-[13.5px] text-[#999] hover:text-[#f5f2eb] hover:bg-[rgba(255,255,255,0.05)] transition-all disabled:opacity-50 border-l-[3px] border-l-transparent"
+              className="flex items-center w-full gap-[10px] px-5 py-[10px] text-[13.5px] text-[rgba(255,255,255,0.8)] hover:text-white hover:bg-[#1e3a8a] transition-all disabled:opacity-50 border-l-[3px] border-l-transparent"
             >
               <span className="text-[16px] w-[18px] text-center">🚪</span>
               {isLoggingOut ? 'Logging out...' : 'Logout'}

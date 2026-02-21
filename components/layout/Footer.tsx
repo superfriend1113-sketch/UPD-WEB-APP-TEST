@@ -13,11 +13,11 @@ export default function Footer() {
         {/* Logo Section */}
         <div className="pt-12 pb-8 border-b border-gray-800">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
             alt="Unlimited Perfect Deals"
-            width={200}
-            height={50}
-            className="h-12 w-auto brightness-0 invert"
+            width={220}
+            height={60}
+            className="h-14 w-auto"
           />
         </div>
 

@@ -20,7 +20,8 @@ async function getDashboardMetrics(retailerId: string | null) {
       totalDeals: 0,
       activeDeals: 0,
       pausedDeals: 0,
-      flaggedDeals: 0,
+      pendingDeals: 0,
+      rejectedDeals: 0,
       totalUnits: 0,
       recoveryValue: 0,
       recentDeals: [],
@@ -28,12 +29,13 @@ async function getDashboardMetrics(retailerId: string | null) {
   }
 
   const supabase = await createClient();
-  const { data: deals, error } = await supabase
+  
+  // Fetch all deals for this retailer
+  const { data: allDeals, error } = await supabase
     .from('deals')
-    .select('id, product_name, slug, status, is_active, view_count, click_count, price, original_price, created_at')
+    .select('*')
     .eq('retailer_id', retailerId)
-    .order('created_at', { ascending: false })
-    .limit(3);
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching deals:', error);
@@ -41,31 +43,41 @@ async function getDashboardMetrics(retailerId: string | null) {
       totalDeals: 0,
       activeDeals: 0,
       pausedDeals: 0,
-      flaggedDeals: 0,
+      pendingDeals: 0,
+      rejectedDeals: 0,
       totalUnits: 0,
       recoveryValue: 0,
       recentDeals: [],
     };
   }
 
+  const deals = allDeals || [];
+  
   // Calculate metrics
-  const allDeals = deals || [];
-  const activeDeals = allDeals.filter(d => d.status === 'approved' && d.is_active).length;
-  const pausedDeals = allDeals.filter(d => !d.is_active).length;
-  const flaggedDeals = 0; // Placeholder
-
-  // Mock total units and recovery value
-  const totalUnits = activeDeals * 25; // Estimate
-  const recoveryValue = allDeals.reduce((sum, d) => sum + (d.price || 0), 0) * 10;
+  const activeDeals = deals.filter(d => d.status === 'approved' && d.is_active).length;
+  const pausedDeals = deals.filter(d => d.status === 'approved' && !d.is_active).length;
+  const pendingDeals = deals.filter(d => d.status === 'pending').length;
+  const rejectedDeals = deals.filter(d => d.status === 'rejected').length;
+  
+  // Calculate total units from quantity field
+  const totalUnits = deals.reduce((sum, d) => sum + (d.quantity || 0), 0);
+  
+  // Calculate recovery value (total value of all inventory)
+  const recoveryValue = deals.reduce((sum, d) => {
+    const price = d.discounted_price || d.price || 0;
+    const quantity = d.quantity || 0;
+    return sum + (price * quantity);
+  }, 0);
 
   return {
-    totalDeals: allDeals.length,
+    totalDeals: deals.length,
     activeDeals,
     pausedDeals,
-    flaggedDeals,
+    pendingDeals,
+    rejectedDeals,
     totalUnits,
     recoveryValue,
-    recentDeals: allDeals.slice(0, 3),
+    recentDeals: deals.slice(0, 3),
   };
 }
 
@@ -136,7 +148,7 @@ export default async function DashboardPage() {
             {metrics.activeDeals}
           </div>
           <div className="text-[12px] text-[#888070] mt-[3px]">
-            ↑ {metrics.pausedDeals} this week
+            {metrics.pausedDeals} paused
           </div>
         </div>
 
@@ -146,10 +158,10 @@ export default async function DashboardPage() {
             TOTAL UNITS
           </div>
           <div className="font-display text-[32px] tracking-[0.5px] leading-none text-[#0d0d0d] mt-[4px]">
-            {metrics.totalUnits}
+            {metrics.totalUnits.toLocaleString()}
           </div>
           <div className="text-[12px] text-[#888070] mt-[3px]">
-            Across all SKUs
+            Across {metrics.totalDeals} SKUs
           </div>
         </div>
 
@@ -181,8 +193,12 @@ export default async function DashboardPage() {
               <strong className="font-semibold">{metrics.pausedDeals}</strong>
             </div>
             <div className="flex justify-between text-[13px]">
-              <span className="text-[#0d0d0d]">Flagged</span>
-              <strong className="font-semibold">{metrics.flaggedDeals}</strong>
+              <span className="text-[#0d0d0d]">Pending</span>
+              <strong className="font-semibold">{metrics.pendingDeals}</strong>
+            </div>
+            <div className="flex justify-between text-[13px]">
+              <span className="text-[#0d0d0d]">Rejected</span>
+              <strong className="font-semibold">{metrics.rejectedDeals}</strong>
             </div>
           </div>
         </div>
@@ -239,7 +255,9 @@ export default async function DashboardPage() {
             </thead>
             <tbody>
               {metrics.recentDeals.map((deal) => {
-                const discount = calculateDiscount(deal.price, deal.original_price);
+                const discount = deal.original_price && deal.original_price > 0
+                  ? Math.round(((deal.original_price - (deal.discounted_price || deal.price || 0)) / deal.original_price) * 100)
+                  : 0;
                 const daysListed = calculateDaysListed(deal.created_at);
                 const isActive = deal.status === 'approved' && deal.is_active;
                 
@@ -247,16 +265,24 @@ export default async function DashboardPage() {
                   <tr key={deal.id} className="border-b border-[#d6d0c4] last:border-b-0 hover:bg-[#ede9df] transition-colors">
                     <td className="px-[16px] py-[13px] text-[13.5px] align-middle">
                       <span className="font-mono text-[12px] text-[#0d0d0d]">
-                        {deal.slug?.substring(0, 8).toUpperCase() || 'N/A'}
+                        {deal.sku || deal.slug?.substring(0, 8).toUpperCase() || deal.id.substring(0, 8).toUpperCase()}
                       </span>
                     </td>
                     <td className="px-[16px] py-[13px] text-[13.5px] text-[#0d0d0d] align-middle">
-                      {deal.product_name}
+                      {deal.title || deal.product_name}
                     </td>
                     <td className="px-[16px] py-[13px] align-middle">
                       {isActive ? (
                         <span className="inline-flex items-center gap-[5px] text-[12px] font-semibold px-[10px] py-[3px] rounded-[12px] bg-[#f0faf5] text-[#1e8a52]">
                           ● Active
+                        </span>
+                      ) : deal.status === 'pending' ? (
+                        <span className="inline-flex items-center gap-[5px] text-[12px] font-semibold px-[10px] py-[3px] rounded-[12px] bg-[#fef8e7] text-[#856404]">
+                          ⏱ Pending
+                        </span>
+                      ) : deal.status === 'rejected' ? (
+                        <span className="inline-flex items-center gap-[5px] text-[12px] font-semibold px-[10px] py-[3px] rounded-[12px] bg-[#fef2f0] text-[#c8401a]">
+                          ✕ Rejected
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-[5px] text-[12px] font-semibold px-[10px] py-[3px] rounded-[12px] bg-[#f5f5f5] text-[#888]">
@@ -267,7 +293,7 @@ export default async function DashboardPage() {
                     <td className="px-[16px] py-[13px] align-middle">
                       <div className="flex items-center gap-1">
                         <span className="font-mono text-[13px] text-[#0d0d0d]">
-                          ${deal.price}
+                          ${(deal.discounted_price || deal.price || 0).toFixed(0)}
                         </span>
                         {discount > 0 && (
                           <span className="bg-[#c8401a] text-white text-[10px] font-bold px-[6px] py-[2px] rounded-[3px] ml-[4px]">
@@ -275,14 +301,14 @@ export default async function DashboardPage() {
                           </span>
                         )}
                       </div>
-                      {deal.original_price && deal.original_price > deal.price && (
+                      {deal.original_price && deal.original_price > (deal.discounted_price || deal.price || 0) && (
                         <div className="font-mono text-[12px] text-[#888070] line-through">
-                          ${deal.original_price}
+                          ${deal.original_price.toFixed(0)}
                         </div>
                       )}
                     </td>
                     <td className="px-[16px] py-[13px] text-[13.5px] align-middle text-[#0d0d0d]">
-                      {Math.floor(Math.random() * 50) + 10}
+                      {deal.quantity || 1}
                     </td>
                     <td className="px-[16px] py-[13px] text-[13.5px] align-middle text-[#0d0d0d]">
                       {daysListed}

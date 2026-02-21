@@ -19,11 +19,11 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="Unlimited Perfect Deals"
-              width={180}
-              height={45}
-              className="h-11 w-auto"
+              width={200}
+              height={60}
+              className="h-12 w-auto"
               priority
             />
           </Link>
@@ -121,6 +121,13 @@ export default function Header() {
                 </div>
               )}
             </div>
+
+            <Link 
+              href="/pricing" 
+              className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors"
+            >
+              Pricing
+            </Link>
             
             <Link 
               href="/contact-us" 
@@ -129,13 +136,13 @@ export default function Header() {
               Contact Us
             </Link>
 
-            {/* Retailer Dashboard Link - Show for all authenticated users */}
-            {user && (
+            {/* Retailer Dashboard - Show for authenticated users, Retailer Signup for guests */}
+            {!loading && (
               <Link 
-                href="/retailer/dashboard" 
+                href={user ? "/retailer/dashboard" : "/retailer/apply"}
                 className="text-sm text-gray-700 hover:text-teal-900 font-medium transition-colors"
               >
-                Retailer Dashboard
+                {user ? "Retailer Dashboard" : "Retailer Signup"}
               </Link>
             )}
 
@@ -304,12 +311,31 @@ export default function Header() {
               </div>
               
               <Link
-                href="/contact-us"
+                href="/pricing"
                 className="text-sm text-gray-700 hover:text-teal-900 font-medium pt-3"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Pricing
+              </Link>
+
+              <Link
+                href="/contact-us"
+                className="text-sm text-gray-700 hover:text-teal-900 font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Contact Us
               </Link>
+
+              {/* Retailer Link for Mobile */}
+              {!loading && (
+                <Link
+                  href={user ? "/retailer/dashboard" : "/retailer/apply"}
+                  className="text-sm text-gray-700 hover:text-teal-900 font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {user ? "Retailer Dashboard" : "Retailer Signup"}
+                </Link>
+              )}
 
               {/* Mobile Auth Buttons / User Menu */}
               {!loading && (

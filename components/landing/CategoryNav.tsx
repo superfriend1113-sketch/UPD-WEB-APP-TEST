@@ -38,7 +38,7 @@ export default function CategoryNav({ categories }: CategoryNavProps) {
             </svg>
           </h2>
           <p className="text-gray-600 max-w-2xl">
-            Discover unbeatable deals on quality products from trusted retailers — clearance inventory at exceptional value.
+            Discover unbeatable deals on quality products from trusted retailers  clearance inventory at exceptional value.
           </p>
         </div>
 

@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Our Mission | Unlimited Perfect Deals',
-  description: 'To eliminate retail waste by transforming excess inventory into measurable value — sustainably, transparently, and intelligently.',
+  description: 'To eliminate retail waste by transforming excess inventory into measurable value  sustainably, transparently, and intelligently.',
 };
 
 export default function OurMissionPage() {
@@ -19,7 +19,7 @@ export default function OurMissionPage() {
               Our Mission
             </h1>
             <p className="text-2xl md:text-3xl text-white font-light leading-relaxed max-w-4xl mx-auto">
-              To eliminate retail waste by transforming excess inventory into measurable value — sustainably, transparently, and intelligently.
+              To eliminate retail waste by transforming excess inventory into measurable value  sustainably, transparently, and intelligently.
             </p>
           </div>
         </div>

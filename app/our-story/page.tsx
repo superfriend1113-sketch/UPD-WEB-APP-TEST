@@ -191,7 +191,7 @@ export default function OurStoryPage() {
               The Result
             </h2>
             <p className="text-2xl text-gray-700 font-light leading-relaxed max-w-4xl mx-auto">
-              Instead of replacing retailer systems, we built a platform that works <span className="font-bold text-teal-600">after</span> inventory becomes a liability — turning <span className="font-bold text-orange-600">sunk costs into recovered capital</span> without brand damage.
+              Instead of replacing retailer systems, we built a platform that works <span className="font-bold text-teal-600">after</span> inventory becomes a liability  turning <span className="font-bold text-orange-600">sunk costs into recovered capital</span> without brand damage.
             </p>
           </div>
 

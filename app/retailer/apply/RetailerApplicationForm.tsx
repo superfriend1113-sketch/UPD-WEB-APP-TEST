@@ -296,7 +296,7 @@ export default function RetailerApplicationForm({ userEmail, userId }: Props) {
               </div>
               <div className="flex flex-col gap-[5px]">
                 <label className="text-[12px] font-semibold text-[#0d0d0d] tracking-[0.4px] uppercase">
-                  EIN <span className="text-[#888070] font-normal">(optional in MVP)</span>
+                  EIN <span className="text-[#888070] font-normal">(optional)</span>
                 </label>
                 <input
                   type="text"
@@ -324,7 +324,7 @@ export default function RetailerApplicationForm({ userEmail, userId }: Props) {
         {currentStep === 2 && (
           <>
             <h2 className="font-display font-extrabold text-[26px] tracking-[0.5px] mb-1">Business Contact</h2>
-            <p className="text-[#888070] text-[13px] mb-6">How we reach you — and how buyers find you.</p>
+            <p className="text-[#888070] text-[13px] mb-6">How we reach you  and how buyers find you.</p>
             
             <div className="grid grid-cols-2 gap-[16px] mb-[16px]">
               <div className="flex flex-col gap-[5px]">

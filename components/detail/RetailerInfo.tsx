@@ -20,14 +20,22 @@ export default function RetailerInfo({ retailer }: RetailerInfoProps) {
         About the Retailer
       </h3>
       <div className="flex items-center gap-5">
-        <div className="relative w-20 h-20 shrink-0 bg-white rounded-xl p-3 shadow-md border border-gray-200">
-          <Image
-            src={retailer.logoUrl}
-            alt={`${retailer.name} logo`}
-            fill
-            className="object-contain p-1"
-          />
-        </div>
+        {retailer.logoUrl ? (
+          <div className="relative w-20 h-20 shrink-0 bg-white rounded-xl p-3 shadow-md border border-gray-200">
+            <Image
+              src={retailer.logoUrl}
+              alt={`${retailer.name} logo`}
+              fill
+              className="object-contain p-1"
+            />
+          </div>
+        ) : (
+          <div className="w-20 h-20 shrink-0 bg-white rounded-xl p-3 shadow-md border border-gray-200 flex items-center justify-center">
+            <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </div>
+        )}
         <div className="flex-1">
           <h4 className="font-bold text-gray-900 text-lg mb-2">{retailer.name}</h4>
           <a

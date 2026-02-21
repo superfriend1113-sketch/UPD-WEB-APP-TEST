@@ -9,6 +9,40 @@ import type { Category } from '../types/category';
 import type { Retailer } from '../types/retailer';
 
 /**
+ * Transform database deal record to Deal type
+ * Converts snake_case to camelCase and prices from dollars to cents
+ */
+function transformDealFromDB(deal: any): Deal {
+  return {
+    id: deal.id,
+    productName: deal.title || deal.product_name,
+    description: deal.description,
+    imageUrl: deal.images?.[0] || deal.image_url || '/placeholder-deal.jpg',
+    dealUrl: deal.deal_url,
+    category: deal.category,
+    retailer: deal.retailer,
+    retailerId: deal.retailer_id,
+    price: Math.round((deal.discounted_price || deal.price || 0) * 100), // Convert dollars to cents
+    originalPrice: Math.round((deal.original_price || 0) * 100), // Convert dollars to cents
+    savingsPercentage: deal.savings_percentage,
+    expirationDate: new Date(deal.expiration_date || deal.end_date),
+    slug: deal.slug,
+    isActive: deal.is_active,
+    isFeatured: deal.is_featured,
+    status: deal.status,
+    approvedAt: deal.approved_at,
+    approvedBy: deal.approved_by,
+    rejectionReason: deal.rejection_reason,
+    metaDescription: deal.meta_description,
+    createdAt: new Date(deal.created_at),
+    updatedAt: new Date(deal.updated_at),
+    createdBy: deal.created_by,
+    viewCount: deal.view_count || 0,
+    clickCount: deal.click_count || 0,
+  } as Deal;
+}
+
+/**
  * Get all active deals from Supabase
  * Filters for active status, approved deals, and non-expired deals
  */
@@ -32,29 +66,7 @@ export async function getActiveDeals(): Promise<Deal[]> {
       throw new Error('Failed to load deals. Please try again later.');
     }
     
-    // Transform snake_case to camelCase
-    return (data || []).map(deal => ({
-      id: deal.id,
-      productName: deal.product_name,
-      description: deal.description,
-      imageUrl: deal.image_url,
-      dealUrl: deal.deal_url,
-      category: deal.category,
-      retailer: deal.retailer,
-      price: deal.price,
-      originalPrice: deal.original_price,
-      savingsPercentage: deal.savings_percentage,
-      expirationDate: new Date(deal.expiration_date),
-      slug: deal.slug,
-      isActive: deal.is_active,
-      isFeatured: deal.is_featured,
-      metaDescription: deal.meta_description,
-      createdAt: new Date(deal.created_at),
-      updatedAt: new Date(deal.updated_at),
-      createdBy: deal.created_by,
-      viewCount: deal.view_count,
-      clickCount: deal.click_count,
-    })) as Deal[];
+    return (data || []).map(transformDealFromDB);
   } catch (error) {
     console.error('Error fetching active deals:', error);
     throw new Error('Failed to load deals. Please try again later.');
@@ -87,29 +99,7 @@ export async function getFeaturedDeals(limit: number = 6): Promise<Deal[]> {
       throw new Error('Failed to load featured deals. Please try again later.');
     }
     
-    // Transform snake_case to camelCase
-    return (data || []).map(deal => ({
-      id: deal.id,
-      productName: deal.product_name,
-      description: deal.description,
-      imageUrl: deal.image_url,
-      dealUrl: deal.deal_url,
-      category: deal.category,
-      retailer: deal.retailer,
-      price: deal.price,
-      originalPrice: deal.original_price,
-      savingsPercentage: deal.savings_percentage,
-      expirationDate: new Date(deal.expiration_date),
-      slug: deal.slug,
-      isActive: deal.is_active,
-      isFeatured: deal.is_featured,
-      metaDescription: deal.meta_description,
-      createdAt: new Date(deal.created_at),
-      updatedAt: new Date(deal.updated_at),
-      createdBy: deal.created_by,
-      viewCount: deal.view_count,
-      clickCount: deal.click_count,
-    })) as Deal[];
+    return (data || []).map(transformDealFromDB);
   } catch (error) {
     console.error('Error fetching featured deals:', error);
     throw new Error('Failed to load featured deals. Please try again later.');
@@ -167,28 +157,7 @@ export async function getDeal(id: string): Promise<Deal | null> {
       return null;
     }
     
-    return {
-      id: data.id,
-      productName: data.product_name,
-      description: data.description,
-      imageUrl: data.image_url,
-      dealUrl: data.deal_url,
-      category: data.category,
-      retailer: data.retailer,
-      price: data.price,
-      originalPrice: data.original_price,
-      savingsPercentage: data.savings_percentage,
-      expirationDate: new Date(data.expiration_date),
-      slug: data.slug,
-      isActive: data.is_active,
-      isFeatured: data.is_featured,
-      metaDescription: data.meta_description,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
-      createdBy: data.created_by,
-      viewCount: data.view_count,
-      clickCount: data.click_count,
-    } as Deal;
+    return transformDealFromDB(data);
   } catch (error) {
     console.error(`Error fetching deal ${id}:`, error);
     throw new Error('Failed to load deal details. Please try again later.');
